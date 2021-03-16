@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chat</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
+  </head>
+  
+  <body>
+    <h1>Chat</h1>
+
+    <div class="messages"></div>
+
+    <form action="/chat" method="POST" id="form">
+        <input type="text" class="message" placeholder="Message" />
+        <input type="submit" />
+    </form>
+
+    <br /><br />
+
+    <b>Room: </b> <p>{{ data.room }}</p>
+
+    <div class="participants">
+      <b>Participants</b>
+    </div>
+    
+    <br><br>
+    
+    <button onclick="leave()">
+      Leave
+    </button>
+
+    <script>
+        console.log(window.location.href);
+      var socket = io.connect(window.location.href);
+
+      socket.on("connect", () => {
+        socket.emit("join");
+        
+        var form = $("form").on("submit", e => {
+          e.preventDefault();
+          let message = $("input.message").val();
+
+          socket.emit("send message", {
+            username: "{{ data.username }}",
+            message: message
+          });
+
+          $("input.message").val("").focus();
+        });
+      });
+            
+      socket.on("receive message", (msg)=>{        
+        $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
+      });
+
+      socket.on("status", (msg)=>{
+
+        if(msg.type == 'join'){
+          $("div.messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
+          $("div.participants").append('<div><p>' + msg.username + "</p></div>");
+        }
+        
+        else if(msg.type == 'leave'){
+          $("div.messages").append('<div><b>' + msg.username + " has left the room.</b></div>");
+        }
+      });
+      
+      socket.on('return_participants', ()=>{
+        console.log(document.querySelector(".participants").getElementsByTagName("p"))
+        //socket.emit('return_participants')
+      })
+      
+      function leave(){
+        socket.emit('leave')
+        socket.disconnect()
+        window.location = window.location.href.replace('/chat', '')
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chat</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+</head>
+<body>
+  {% if not data.logged_in %}
+    <h2>Signup</h2>
+  
+      <form action="/signup" method="post">
+        <input name="username" type="text" placeholder="Username" />
+        <input name="password" type="password" placeholder="Password" />
+        <input type="submit" />
+      </form>
+    
+    <h2>Or</h2>
+
+    <h2>Login</h2>
+
+    <form action="/login" method="post">
+      <input name="username" type="text" placeholder="Username" />
+      <input name="password" type="password" placeholder="Password" />
+      <input type="submit" />
+    </form>
+
+  {% else %}
+
+    <h2>Welcome, {{ data.username }}</h2>
+    <h2>Join Room</h2>
+    
+      <form action="/login" method="post" id="loginForm">
+        <input name="room" type="text" placeholder="Room" />
+        <input type="submit" />
+      </form>
+    
+    <br>
+
+    <button onclick="signout()">
+      Sign Out
+    </button>
+  {% endif %}
+
+
+  <script>
+    function signout(){
+      $.ajax({
+        url: '/signout',
+        type: 'post',
+        data: {username: '{{username}}'},
+        success: ()=>{
+          location.reload();
+        }
+      });
+    }
+
+    /*
+
+    On Form Submit, server should send success signal, then refresh page.
+    On server, check if account already exists in database.
+
+    $("#signupForm").on("submit", e => {
+      e.preventDefault()
+      $.ajax({
+        url: '/signup',
+        type: 'post',
+        data: $('#signupForm').serialize(),
+        success: function(data){
+          console.log(data)
+        }
+      });
+    });*/
+  </script>
+</body>
+</html>
