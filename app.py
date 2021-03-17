@@ -7,7 +7,8 @@ import sqlite3
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['SECRET_KEY'] = 'jgr8e8943t894hg954f9846fh456'
-socketio = SocketIO(app, cors_allowed_origins='*')
+#socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app)
 
 
 
