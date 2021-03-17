@@ -131,7 +131,7 @@
           if(data.status == "room_doesnt_exist"){
             var p = document.createElement("p")
             p.innerText = "Room does not exist!"
-            document.getElementById('error_box_signup').appendChild(p)
+            document.getElementById('error_box_room_join').appendChild(p)
           }
           else if(data.status == "success"){
             window.location.href = '/chat'
@@ -150,7 +150,7 @@
         data: $('#createRoomForm').serialize(),
         success: function(data){
           //change the status to add validdation in the server to ensure no punctation is there in the room name
-          if(data.status == "some_error_in_making_room"){
+          if(data.status == "some_error_in_creating_room"){
             /*var p = document.createElement("p")
             p.innerText = "Account already exists!"
             document.getElementById('error_box_signup').appendChild(p)*/

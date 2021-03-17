@@ -19,7 +19,8 @@
 
     <br /><br />
 
-    <b>Room: </b> <p>{{ data.room }}</p>
+    <b>Room Name: </b> <p>{{ data.room_name }}</p>
+    <b>Room Code: </b> <p>{{ data.room }}</p>
 
     <div class="participants">
       <b>Participants</b>
@@ -50,13 +51,18 @@
           $("input.message").val("").focus();
         });
       });
+
             
-      socket.on("receive message", (msg)=>{        
-        $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
+      socket.on("receive message", (msg)=>{
+        if(msg.username == '{{ data.username }}'){
+          $("div.messages").append('<div style="float:right"><b>' + msg.username + ":</b> " + msg.message + "</div>");
+        }
+        else{
+          $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
+        }
       });
 
       socket.on("status", (msg)=>{
-
         if(msg.type == 'join'){
           $("div.messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
           $("div.participants").append('<div><p>' + msg.username + "</p></div>");

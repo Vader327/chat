@@ -39,20 +39,28 @@ def room():
   if type_ == "join":
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
-      data = cur.execute("SELECT * FROM rooms WHERE id = ?", (room,)).fetchall()
+      data = cur.execute("SELECT * FROM rooms WHERE id = ?", (room,)).fetchone()
+      print("\n")
+      print(data)
+      print("\n")
 
       if data:
         session['room'] = room
+        session['room_name'] = data[1]
         return jsonify({'status': 'success'})
 
       else:
         return jsonify({'status': 'room_doesnt_exist'})
   
   elif type_ == "create":
-    session['room'] = room
+    room_id = str(uuid.uuid4()).split("-")[0]
+
+    session['room'] = room_id
+    session['room_name'] = room
+
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
-      cur.execute("INSERT INTO rooms (id,name,users) VALUES (?,?,?)", (str(uuid.uuid4()).split("-")[0], room, session['username'] + ','))
+      cur.execute("INSERT INTO rooms (id,name,users) VALUES (?,?,?)", (room_id, room, session['username'] + ','))
       con.commit()
 
     return jsonify({'status': 'success'})
@@ -121,9 +129,15 @@ def signout():
 def chat():
   username = session.get('username')
   room = session.get('room')
+  room_name = session.get('room_name')
+
+  with sqlite3.connect("database.db") as con:
+    cur = con.cursor()
+    data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
+    print(data)
 
   if username and room:
-    data = {'username': username, 'room': room}
+    data = {'username': username, 'room': room, 'room_name': room_name}
     return render_template("chat.html", data=data)
   else:
     return redirect(url_for('index'))
