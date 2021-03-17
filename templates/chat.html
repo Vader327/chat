@@ -55,7 +55,7 @@
             
       socket.on("receive message", (msg)=>{
         if(msg.username == '{{ data.username }}'){
-          $("div.messages").append('<div style="float:right"><b>' + msg.username + ":</b> " + msg.message + "</div>");
+          $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
         }
         else{
           $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
