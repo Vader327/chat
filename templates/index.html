@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chat</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+</head>
+<body>
+  {% if not data.logged_in %}
+    <h2>Signup</h2>
+  
+    <form action="/signup" method="post" id="signupForm">
+      <input name="username" type="text" placeholder="Username" />
+      <input name="password" type="password" placeholder="Password" />
+      <input type="submit" />
+    </form>
+
+    <div id="error_box_signup"></div>
+    
+    <h2>Or</h2>
+
+    <h2>Login</h2>
+
+    <form action="/login" method="post" id="loginForm">
+      <input name="username" type="text" placeholder="Username" />
+      <input name="password" type="password" placeholder="Password" />
+      <input type="submit" />
+    </form>
+
+    <div id="error_box_login"></div>
+
+  {% else %}
+
+    <h2>Welcome, {{ data.username }}</h2>
+    <h2>Join Room</h2>
+    
+    <form action="/room" method="post" id="joinRoomForm">
+      <input name="room" type="text" placeholder="Enter Room Code" />
+      <input type="submit" />
+    </form>
+
+    <div id="error_box_room_join"></div>
+    
+    <h2>Or</h2>
+
+    <h2>Create Room</h2>
+    
+    <form action="/room" method="post" id="createRoomForm">
+      <input name="room" type="text" placeholder="Enter Room Name" />
+      <input type="submit" />
+    </form>
+    
+    <br>
+
+    <button onclick="signout()">
+      Sign Out
+    </button>
+  {% endif %}
+
+
+  <script>
+    function signout(){
+      $.ajax({
+        url: '/signout',
+        type: 'post',
+        data: {username: '{{username}}'},
+        success: ()=>{
+          location.reload();
+        }
+      });
+    }
+
+    
+
+    $("#signupForm").on("submit", e => {
+      e.preventDefault()
+      $.ajax({
+        url: '/signup',
+        type: 'post',
+        data: $('#signupForm').serialize(),
+        success: function(data){
+          if(data.status == "account_already_exists"){
+            var p = document.createElement("p")
+            p.innerText = "Account already exists!"
+            document.getElementById('error_box_signup').appendChild(p)
+          }
+          else if(data.status == "success"){
+            location.reload();
+          }
+        }
+      });
+    });
+
+
+
+    $("#loginForm").on("submit", e => {
+      e.preventDefault()
+      $.ajax({
+        url: '/login',
+        type: 'post',
+        data: $('#loginForm').serialize(),
+        success: function(data){
+          if(data.status == "account_doesnt_exists"){
+            var p = document.createElement("p")
+            p.innerText = "Account does not exists!"
+            document.getElementById('error_box_login').appendChild(p)
+          }
+
+          else if(data.status == "incorrect_password"){
+            var p = document.createElement("p")
+            p.innerText = "Incorrect Password!"
+            document.getElementById('error_box_login').appendChild(p)
+          }
+
+          else if(data.status == "success"){
+            location.reload();
+          }
+        }
+      });
+    });
+
+
+
+    $("#joinRoomForm").on("submit", e => {
+      e.preventDefault()
+      $.ajax({
+        url: '/room?type=join',
+        type: 'post',
+        data: $('#joinRoomForm').serialize(),
+        success: function(data){
+          if(data.status == "room_doesnt_exist"){
+            var p = document.createElement("p")
+            p.innerText = "Room does not exist!"
+            document.getElementById('error_box_signup').appendChild(p)
+          }
+          else if(data.status == "success"){
+            window.location.href = '/chat'
+          }
+        }
+      });
+    });
+
+
+
+    $("#createRoomForm").on("submit", e => {
+      e.preventDefault()
+      $.ajax({
+        url: '/room?type=create',
+        type: 'post',
+        data: $('#createRoomForm').serialize(),
+        success: function(data){
+          //change the status to add validdation in the server to ensure no punctation is there in the room name
+          if(data.status == "some_error_in_making_room"){
+            /*var p = document.createElement("p")
+            p.innerText = "Account already exists!"
+            document.getElementById('error_box_signup').appendChild(p)*/
+          }
+          else if(data.status == "success"){
+            window.location.href = '/chat'
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
