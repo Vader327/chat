@@ -55,9 +55,15 @@
 
     <b>Your Rooms:</b>
     {% for room in data.rooms %}
-      <p>{{ room[0] }}</p>
+      <div style="width: 20%; display:flex; justify-content:space-between; margin-bottom: 10px">
+        <p>{{ room[1] }}</p>
+
+        <button onclick="join_room('room={{ room[0] }}')">
+          Join
+        </button>
+      </div>
     {% endfor %}
-        
+
     <br>
 
     <button onclick="signout()">
@@ -74,6 +80,22 @@
         data: {username: '{{username}}'},
         success: ()=>{
           location.reload();
+        }
+      });
+    }
+
+    function join_room(data){
+      $.ajax({
+        url: '/room?type=join',
+        type: 'post',
+        data: data,
+        success: function(data){
+          if(data.status == "room_doesnt_exist"){
+           $('#error_room_join').text("Room does not exist!")
+          }
+          else if(data.status == "success"){
+            window.location.href = '/chat'
+          }
         }
       });
     }
@@ -130,26 +152,14 @@
 
 
     $("#joinRoomForm").on("submit", e => {
-      e.preventDefault()
-      $.ajax({
-        url: '/room?type=join',
-        type: 'post',
-        data: $('#joinRoomForm').serialize(),
-        success: function(data){
-          if(data.status == "room_doesnt_exist"){
-           $('#error_room_join').text("Room does not exist!")
-          }
-          else if(data.status == "success"){
-            window.location.href = '/chat'
-          }
-        }
-      });
+      e.preventDefault();
+      join_room($('#joinRoomForm').serialize());
     });
 
 
 
     $("#createRoomForm").on("submit", e => {
-      e.preventDefault()
+      e.prevenDefault();
       $.ajax({
         url: '/room?type=create',
         type: 'post',

@@ -20,10 +20,13 @@ def index():
 
   data={'username': None, 'password': None, 'uid': None, 'logged_in': False, 'rooms': []}
 
+  invite_code = request.args.get('invite_code')
+  print(invite_code)
+
   if name and password:
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
-      all_rooms = cur.execute("SELECT name FROM rooms WHERE users LIKE '%" + name + "%'").fetchall()
+      all_rooms = cur.execute("SELECT id, name FROM rooms WHERE users LIKE '%" + name + "%'").fetchall()
       data['rooms'] = all_rooms
 
     data['username'] = name
@@ -44,9 +47,6 @@ def room():
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
       data = cur.execute("SELECT * FROM rooms WHERE id = ?", (room,)).fetchone()
-      print("\n")
-      print(data)
-      print("\n")
 
       if data:
         session['room'] = room
@@ -86,6 +86,7 @@ def signup():
     else:
       session['username'] = name
       session['password'] = password
+      session['logged_in'] = True
 
       user_id = str(uuid.uuid4()).split("-")
       user_id = "".join(user_id)
@@ -112,7 +113,9 @@ def login():
       if data[2].strip().lower() == password.strip().lower():
         session['username'] = name
         session['password'] = password
+        session['logged_in'] = True
         session['uid'] = data[0]
+
         return jsonify({'status': 'success'})
     
       elif data[2].strip().lower() != password.strip().lower():
@@ -137,7 +140,7 @@ def chat():
   room = session.get('room')
   room_name = session.get('room_name')
 
-  if username and room:
+  if session.get('logged_in') and room:
     
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
@@ -156,6 +159,19 @@ def chat():
 
   else:
     return redirect(url_for('index'))
+
+@app.route('/invite')
+def invite():
+  logged_in = session.get('logged_in')
+  code = request.args.get('code')
+
+  print(logged_in)
+
+  if logged_in:
+    username = session.get('username')
+    return 'ok'
+  else:
+    return redirect(url_for('index', invite_code=code))
 
 
 
