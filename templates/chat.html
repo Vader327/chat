@@ -11,10 +11,11 @@
     <h1>Chat</h1>
 
     <div class="messages"></div>
+    <p id="typingStatus"></p>
 
     <form action="/chat" method="POST" id="form">
-        <input type="text" class="message" placeholder="Message" />
-        <input type="submit" />
+      <input type="text" class="message" id="inputField" placeholder="Message" autocomplete="off" />
+      <input type="submit" />
     </form>
 
     <br /><br />
@@ -33,7 +34,7 @@
     </button>
 
     <script>
-        console.log(window.location.href);
+      console.log(window.location.href);
       var socket = io.connect(window.location.href);
 
       socket.on("connect", () => {
@@ -71,18 +72,42 @@
         else if(msg.type == 'leave'){
           $("div.messages").append('<div><b>' + msg.username + " has left the room.</b></div>");
         }
+
+        else if(msg.type == 'typing' && msg.username != '{{ data.username }}'){
+          if(msg.typing){
+           $('#typingStatus').text(msg.username + " is typing...")
+          }
+          else{
+            $('#typingStatus').text("")
+          }
+          //$("div.messages").append('<div><b>' + msg.username + " has left the room.</b></div>");
+        }
       });
       
       socket.on('return_participants', ()=>{
         console.log(document.querySelector(".participants").getElementsByTagName("p"))
         //socket.emit('return_participants')
       })
+
       
       function leave(){
         socket.emit('leave')
         socket.disconnect()
         window.location = window.location.href.replace('/chat', '')
       }
+
+      var timeout = null;
+      $("#inputField").on("input", function(){
+        socket.emit("typing_status", {'typing': true});
+        
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(function () {
+          socket.emit("typing_status", {'typing': false});
+        }, 800);
+        
+      });
     </script>
   </body>
 </html>

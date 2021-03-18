@@ -167,6 +167,10 @@ def send_message(json):
   print(rooms(request.sid))
   emit('receive message', json, namespace='/chat', room=session.get('room'))
 
+@socketio.on('typing_status', namespace='/chat')
+def send_status(json):
+  emit('status', {'username': session.get('username'), 'type': 'typing', 'typing': json['typing']}, namespace='/chat', room=session.get('room'))
+
 """
 README
 
