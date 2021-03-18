@@ -7,8 +7,8 @@ import sqlite3
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['SECRET_KEY'] = 'jgr8e8943t894hg954f9846fh456'
-#socketio = SocketIO(app, cors_allowed_origins='*')
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins='*')
+#socketio = SocketIO(app)
 
 
 
@@ -135,11 +135,19 @@ def chat():
   with sqlite3.connect("database.db") as con:
     cur = con.cursor()
     data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
-    print(data)
+
+    users_in_room = data[0].split(",")
+
+    if session.get('username') not in users_in_room:
+      users_in_room.append(username)
+
+      cur.execute("UPDATE rooms SET users = ? WHERE id = ?", (','.join(users_in_room), room))
+      con.commit()
 
   if username and room:
-    data = {'username': username, 'room': room, 'room_name': room_name}
+    data = {'username': username, 'room': room, 'room_name': room_name, 'participants': users_in_room}
     return render_template("chat.html", data=data)
+
   else:
     return redirect(url_for('index'))
 
@@ -149,7 +157,7 @@ def chat():
 def join():
   client_room = session.get('room')
   join_room(client_room, namespace='/chat')
-  print(rooms(request.sid))
+
   emit('status', {'username': session.get('username'), 'type': 'join'}, namespace='/chat', room=client_room)
   
 

@@ -25,6 +25,10 @@
 
     <div class="participants">
       <b>Participants</b>
+
+      {% for user in data.participants %}
+        <p>{{ user }}</p>
+      {% endfor %}
     </div>
     
     <br><br>
@@ -66,7 +70,7 @@
       socket.on("status", (msg)=>{
         if(msg.type == 'join'){
           $("div.messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
-          $("div.participants").append('<div><p>' + msg.username + "</p></div>");
+          //j$("div.participants").append('<div><p>' + msg.username + "</p></div>");
         }
         
         else if(msg.type == 'leave'){
