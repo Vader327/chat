@@ -16,16 +16,19 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 def index():
   name = session.get('username')
   password = session.get('password')
+  uid = session.get('uid')
 
-  data={'username': None, 'password': None, 'logged_in': False}
+  data={'username': None, 'password': None, 'uid': None, 'logged_in': False, 'rooms': []}
 
   if name and password:
-    #with sqlite3.connect("database.db") as con:
-    #  cur = con.cursor()
-    #  db_data = cur.execute("SELECT * FROM users WHERE name = ?", (name, )).fetchall()
+    with sqlite3.connect("database.db") as con:
+      cur = con.cursor()
+      all_rooms = cur.execute("SELECT name FROM rooms WHERE users LIKE '%" + name + "%'").fetchall()
+      data['rooms'] = all_rooms
 
     data['username'] = name
     data['password'] = password
+    data['uid'] = uid
     data['logged_in'] = True
   
   return render_template("index.html", data=data)
@@ -83,10 +86,13 @@ def signup():
     else:
       session['username'] = name
       session['password'] = password
+
+      user_id = str(uuid.uuid4()).split("-")
+      user_id = "".join(user_id)
       
       with sqlite3.connect("database.db") as con:
         cur = con.cursor()
-        cur.execute("INSERT INTO users (id, name,password) VALUES (?,?,?)", (str(uuid.uuid4()), name, password))
+        cur.execute("INSERT INTO users (id, name,password) VALUES (?,?,?)", (user_id, name, password))
         con.commit()
 
       return jsonify({'status': 'success'})
@@ -106,6 +112,7 @@ def login():
       if data[2].strip().lower() == password.strip().lower():
         session['username'] = name
         session['password'] = password
+        session['uid'] = data[0]
         return jsonify({'status': 'success'})
     
       elif data[2].strip().lower() != password.strip().lower():
@@ -118,9 +125,7 @@ def login():
 
 @app.route('/signout', methods=['POST'])
 def signout():
-  session['username'] = None
-  session['password'] = None
-  session['logged_in'] = False
+  session.clear()
 
   return redirect(url_for('index'))
 
@@ -132,19 +137,20 @@ def chat():
   room = session.get('room')
   room_name = session.get('room_name')
 
-  with sqlite3.connect("database.db") as con:
-    cur = con.cursor()
-    data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
-
-    users_in_room = data[0].split(",")
-
-    if session.get('username') not in users_in_room:
-      users_in_room.append(username)
-
-      cur.execute("UPDATE rooms SET users = ? WHERE id = ?", (','.join(users_in_room), room))
-      con.commit()
-
   if username and room:
+    
+    with sqlite3.connect("database.db") as con:
+      cur = con.cursor()
+      data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
+
+      users_in_room = data[0].split(",")
+
+      if username not in users_in_room:
+        users_in_room.append(username)
+
+        cur.execute("UPDATE rooms SET users = ? WHERE id = ?", (','.join(users_in_room), room))
+        con.commit()
+
     data = {'username': username, 'room': room, 'room_name': room_name, 'participants': users_in_room}
     return render_template("chat.html", data=data)
 

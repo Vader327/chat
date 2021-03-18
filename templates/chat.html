@@ -70,7 +70,14 @@
       socket.on("status", (msg)=>{
         if(msg.type == 'join'){
           $("div.messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
-          //j$("div.participants").append('<div><p>' + msg.username + "</p></div>");
+
+          pariticpants_list = []
+          for(var element of document.getElementsByClassName('participants')[0].children) {
+            pariticpants_list.push(element.innerText)
+          }
+          if(!pariticpants_list.includes(msg.username)){
+            $("div.participants").append('<div><p>' + msg.username + "</p></div>");
+          }
         }
         
         else if(msg.type == 'leave'){

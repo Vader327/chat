@@ -32,16 +32,6 @@
   {% else %}
 
     <h2>Welcome, {{ data.username }}</h2>
-    <h2>Join Room</h2>
-    
-    <form action="/room" method="post" id="joinRoomForm">
-      <input name="room" type="text" placeholder="Enter Room Code" />
-      <input type="submit" />
-    </form>
-
-    <div id="error_box_room_join"></div>
-    
-    <h2>Or</h2>
 
     <h2>Create Room</h2>
     
@@ -49,7 +39,25 @@
       <input name="room" type="text" placeholder="Enter Room Name" />
       <input type="submit" />
     </form>
+
+    <h2>Or</h2>
+
+    <h2>Join Room</h2>
     
+    <form action="/room" method="post" id="joinRoomForm">
+      <input name="room" type="text" placeholder="Enter Room Code" />
+      <input type="submit" />
+    </form>
+
+    <p id="error_room_join"></p>
+
+    <br>
+
+    <b>Your Rooms:</b>
+    {% for room in data.rooms %}
+      <p>{{ room[0] }}</p>
+    {% endfor %}
+        
     <br>
 
     <button onclick="signout()">
@@ -129,9 +137,7 @@
         data: $('#joinRoomForm').serialize(),
         success: function(data){
           if(data.status == "room_doesnt_exist"){
-            var p = document.createElement("p")
-            p.innerText = "Room does not exist!"
-            document.getElementById('error_box_room_join').appendChild(p)
+           $('#error_room_join').text("Room does not exist!")
           }
           else if(data.status == "success"){
             window.location.href = '/chat'
