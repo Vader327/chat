@@ -84,11 +84,11 @@
       });
     }
 
-    function join_room(data){
+    function join_room(code){
       $.ajax({
         url: '/room?type=join',
         type: 'post',
-        data: data,
+        data: code,
         success: function(data){
           if(data.status == "room_doesnt_exist"){
            $('#error_room_join').text("Room does not exist!")
@@ -143,7 +143,13 @@
           }
 
           else if(data.status == "success"){
-            location.reload();
+            if('{{ data.from_invite }}' == 'True'){
+              window.location.href = '/invite?code={{ data.invite_code }}'
+              //console.log('ok')
+            }
+            else{
+              location.reload();
+            }
           }
         }
       });

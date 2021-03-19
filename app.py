@@ -17,13 +17,15 @@ def index():
   name = session.get('username')
   password = session.get('password')
   uid = session.get('uid')
-
-  data={'username': None, 'password': None, 'uid': None, 'logged_in': False, 'rooms': []}
-
   invite_code = request.args.get('invite_code')
-  print(invite_code)
 
-  if name and password:
+  data={'username': None, 'password': None, 'uid': None, 'logged_in': False, 'rooms': [], 'from_invite': False, 'invite_code': None}
+
+  if invite_code:
+    data['from_invite'] = True
+    data['invite_code'] = invite_code
+
+  if session.get('logged_in'):
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
       all_rooms = cur.execute("SELECT id, name FROM rooms WHERE users LIKE '%" + name + "%'").fetchall()
@@ -38,10 +40,22 @@ def index():
 
 
 
-@app.route('/room', methods=['POST'])
+@app.route('/room', methods=['GET','POST'])
 def room():
-  room = request.form['room']
-  type_ = request.args.get('type')
+  from_invite = request.args.get('from_invite')
+
+  if from_invite == 'True':
+    room = request.args.get('code')
+    type_ = "join"
+  
+  
+  else:
+    room = request.form['room']
+    type_ = request.args.get('type')
+
+  print("\n")
+  print(room)
+  print("\n")
 
   if type_ == "join":
     with sqlite3.connect("database.db") as con:
@@ -49,6 +63,11 @@ def room():
       data = cur.execute("SELECT * FROM rooms WHERE id = ?", (room,)).fetchone()
 
       if data:
+        print("\n\n\n")
+        print(data)
+        print(data[1])
+        print("\n\n\n")
+
         session['room'] = room
         session['room_name'] = data[1]
         return jsonify({'status': 'success'})
@@ -129,7 +148,6 @@ def login():
 @app.route('/signout', methods=['POST'])
 def signout():
   session.clear()
-
   return redirect(url_for('index'))
 
 
@@ -140,8 +158,13 @@ def chat():
   room = session.get('room')
   room_name = session.get('room_name')
 
-  if session.get('logged_in') and room:
-    
+  print("\n")
+  print(room)
+  print(session.get('logged_in'))
+  print(room_name)
+  print("\n")
+
+  if session.get('logged_in') and room:    
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
       data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
@@ -164,12 +187,12 @@ def chat():
 def invite():
   logged_in = session.get('logged_in')
   code = request.args.get('code')
-
-  print(logged_in)
+  session['room'] = code
 
   if logged_in:
-    username = session.get('username')
-    return 'ok'
+    #return redirect(url_for('room', code=code))
+    return render_template('invite.html', code=code)
+
   else:
     return redirect(url_for('index', invite_code=code))
 

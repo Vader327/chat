@@ -31,6 +31,11 @@
       {% endfor %}
     </div>
     
+    <br>
+
+    <b>Invite Link:</b>
+    <p id="invite_link"></p>
+    
     <br><br>
     
     <button onclick="leave()">
@@ -40,6 +45,8 @@
     <script>
       console.log(window.location.href);
       var socket = io.connect(window.location.href);
+
+      $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 
       socket.on("connect", () => {
         socket.emit("join");
@@ -94,11 +101,6 @@
           //$("div.messages").append('<div><b>' + msg.username + " has left the room.</b></div>");
         }
       });
-      
-      socket.on('return_participants', ()=>{
-        console.log(document.querySelector(".participants").getElementsByTagName("p"))
-        //socket.emit('return_participants')
-      })
 
       
       function leave(){
