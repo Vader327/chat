@@ -13,8 +13,8 @@
     <div class="messages"></div>
     <p id="typingStatus"></p>
 
-    <form action="/chat" method="POST" id="form">
-      <input type="text" class="message" id="inputField" placeholder="Message" autocomplete="off" />
+    <form action="/chat" method="POST" id="form" onsubmit="return submitForm(event)">
+      <textarea onkeydown="submitFormOnEnterPress(event)" id="inputField" placeholder="Message"></textarea>
       <input type="submit" />
     </form>
 
@@ -48,47 +48,54 @@
 
       $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 
+      function submitFormOnEnterPress(e) {
+        if(e.which == 13 && !e.shiftKey) { 
+          submitForm(e)
+        }
+      }
+
       socket.on("connect", () => {
         socket.emit("join");
-        
-        var form = $("form").on("submit", e => {
-          e.preventDefault();
-          let message = $("input.message").val();
+      });
 
+      function submitForm(e){
+        e.preventDefault();
+        let message = $("#inputField").val();
+
+        if(message.trim() != ""){
           socket.emit("send message", {
             username: "{{ data.username }}",
             message: message
           });
 
-          $("input.message").val("").focus();
-        });
-      });
-
+          $("#inputField").val("").focus();
+        }
+      }
             
       socket.on("receive message", (msg)=>{
         if(msg.username == '{{ data.username }}'){
-          $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
+          $(".messages").append('<div style="white-space: pre-wrap"><b>' + msg.username + ":</b> " + msg.message + "</div>");
         }
         else{
-          $("div.messages").append('<div><b>' + msg.username + ":</b> " + msg.message + "</div>");
+          $(".messages").append('<div style="white-space: pre-wrap;"><b>' + msg.username + ":</b> " + msg.message + "</div>");
         }
       });
 
       socket.on("status", (msg)=>{
         if(msg.type == 'join'){
-          $("div.messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
+          $(".messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
 
           pariticpants_list = []
           for(var element of document.getElementsByClassName('participants')[0].children) {
             pariticpants_list.push(element.innerText)
           }
           if(!pariticpants_list.includes(msg.username)){
-            $("div.participants").append('<div><p>' + msg.username + "</p></div>");
+            $(".participants").append('<div><p>' + msg.username + "</p></div>");
           }
         }
         
         else if(msg.type == 'leave'){
-          $("div.messages").append('<div><b>' + msg.username + " has left the room.</b></div>");
+          $(".messages").append('<div><b>' + msg.username + " has left the room.</b></div>");
         }
 
         else if(msg.type == 'typing' && msg.username != '{{ data.username }}'){
