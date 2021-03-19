@@ -5,24 +5,60 @@
     <title>Chat</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
+
+    <script type="module" src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule="" src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.js"></script>
+
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
     <style>
+      html{
+        height: 100%;
+      }
       body{
         font-family: 'Poppins';
+        margin: 0px;
+        height: 100%;
       }
 
       .main{
         display: flex;
         width: 100%;
+        height: 100%;
       }
 
       .info_bar{
         width: 30%;
-        background-color: #f1f1f1;
-        margin-left: 10px;
+        background-color: #f8f8f8;
+        display: none;
+      }
+
+      .messages_header{
+        box-shadow: 0px 10px 19px 0px rgba(191,191,191,0.47);
+        padding: 7px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .header_icon_container{
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+      }
+      .messages_header ion-icon{
+        font-size: 25px;
+        color: #d4d4d4;
+        margin-right: 20px;
+      }
+
+      .header_participants{
+        display: flex;
+      }
+      .header_participants p{
+        color: #979797;
+        font-size: 15px;
+        margin: 0px;
       }
 
       .main_message_view{
@@ -34,10 +70,16 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .messages b{
+        color: #d4d4d4;
       }
 
       .message_container{
-        width: 100%
+        width: 100%;
       }
 
       .message{
@@ -62,42 +104,66 @@
       .from_user p{
         color: white;
       }
+
+      #chat_form{
+        width: 100%;
+        position: fixed;
+        bottom: 0px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 7px;
+        box-sizing: border-box;
+        box-shadow: 0px -5px 19px 0px rgba(191,191,191,0.47);
+      }
+      #inputField{
+        width: 50%;
+        resize: none;
+        border: none;
+        border-radius: 50px;
+        outline: none;
+        background-color: #eeeeee;
+        padding: 7px;
+        box-sizing: border-box;
+        font-family: 'Poppins';
+      }
     </style>
   </head>
   
   <body>
-    <h1>Chat</h1>
-
     <div class="main">
       <div class="main_message_view">
-        <div class="messages">
-          <div class="message_container">
-            <div class="message from_user">
-              <p>
-                Hello
-                Hi
-              </p>
+        <div class="messages_header">
+          <div>
+            <b>{{ data.room_name }}</b>
+
+            <div class="header_participants">  
+              {% for user in data.participants %}
+                <p>{{ user }},&nbsp;</p>
+              {% endfor %}
             </div>
           </div>
 
-          <div class="message_container">
-            <div class="message">
-              <p>Hey</p>
-            </div>
+          <div class="header_icon_container">
+            <ion-icon style="font-size: 22px;" name="call"></ion-icon>
+            <ion-icon name="videocam"></ion-icon>
+            <ion-icon name="ellipsis-horizontal"></ion-icon>
           </div>
+        </div>
+
+        <div class="messages">
         </div>
 
         <p id="typingStatus"></p>
 
 
-        <form action="/chat" method="POST" id="form" onsubmit="return submitForm(event)">
-          <textarea onkeydown="submitFormOnEnterPress(event)" id="inputField" placeholder="Message"></textarea>
+        <form action="/chat" method="POST" id="chat_form" onsubmit="return submitForm(event)">
+          <textarea onkeydown="submitFormOnEnterPress(event)" id="inputField" placeholder="Message" rows="1"></textarea>
           <input type="submit" />
         </form>
       </div>
 
       <div class="info_bar">
-        <b>Room Name: </b> <p>{{ data.room_name }}</p>
         <b>Room Code: </b> <p>{{ data.room }}</p>
 
         <div class="participants">
@@ -164,7 +230,7 @@
 
       socket.on("status", (msg)=>{
         if(msg.type == 'join'){
-          $(".messages").append('<div><b>' + msg.username + " has entered the room.</b></div>");
+          $(".messages").append('<b>' + msg.username + " Joined the Chat</b>");
 
           pariticpants_list = []
           for(var element of document.getElementsByClassName('participants')[0].children) {
@@ -206,7 +272,6 @@
         timeout = setTimeout(function () {
           socket.emit("typing_status", {'typing': false});
         }, 800);
-        
       });
     </script>
   </body>
