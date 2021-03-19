@@ -115,7 +115,12 @@
             document.getElementById('error_box_signup').appendChild(p)
           }
           else if(data.status == "success"){
-            location.reload();
+            if('{{ data.from_invite }}' == 'True'){
+              window.location.href = '/invite?code={{ data.invite_code }}'
+            }
+            else{
+              location.reload();
+            }
           }
         }
       });
@@ -145,7 +150,6 @@
           else if(data.status == "success"){
             if('{{ data.from_invite }}' == 'True'){
               window.location.href = '/invite?code={{ data.invite_code }}'
-              //console.log('ok')
             }
             else{
               location.reload();

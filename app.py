@@ -53,9 +53,6 @@ def room():
     room = request.form['room']
     type_ = request.args.get('type')
 
-  print("\n")
-  print(room)
-  print("\n")
 
   if type_ == "join":
     with sqlite3.connect("database.db") as con:
@@ -63,11 +60,6 @@ def room():
       data = cur.execute("SELECT * FROM rooms WHERE id = ?", (room,)).fetchone()
 
       if data:
-        print("\n\n\n")
-        print(data)
-        print(data[1])
-        print("\n\n\n")
-
         session['room'] = room
         session['room_name'] = data[1]
         return jsonify({'status': 'success'})
@@ -158,12 +150,6 @@ def chat():
   room = session.get('room')
   room_name = session.get('room_name')
 
-  print("\n")
-  print(room)
-  print(session.get('logged_in'))
-  print(room_name)
-  print("\n")
-
   if session.get('logged_in') and room:    
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
@@ -190,7 +176,6 @@ def invite():
   session['room'] = code
 
   if logged_in:
-    #return redirect(url_for('room', code=code))
     return render_template('invite.html', code=code)
 
   else:
