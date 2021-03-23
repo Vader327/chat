@@ -48,7 +48,7 @@
       }
       .messages_header ion-icon{
         font-size: 25px;
-        color: #d4d4d4;
+        color: #a5a5a5;
         margin-right: 20px;
       }
 
@@ -56,7 +56,7 @@
         display: flex;
       }
       .header_participants p{
-        color: #979797;
+        color: #816969;
         font-size: 15px;
         margin: 0px;
       }
@@ -86,46 +86,70 @@
         background-color: #eaeaea;
         margin-bottom: 10px;
         float: left;
-        padding: 5px;
+        padding: 7px;
         padding-left: 10px;
         padding-right: 10px;
-        border-radius: 50px;
-        word-wrap: break-word;
+        border-radius: 20px;
+        max-width: 60%;
       }
-      .message p{
+      .message pre{
         color: black;
         margin: 0px;
+        font-family: 'Poppins';
       }
 
       .from_user{
         float: right;
         background-color: #1c77ff;
       }
-      .from_user p{
+      .from_user pre{
         color: white;
       }
 
       #chat_form{
+        background-color: #eaeaea;
         width: 100%;
         position: fixed;
         bottom: 0px;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
         padding: 7px;
+        padding-left: 10%;
+        padding-right: 10%;
         box-sizing: border-box;
         box-shadow: 0px -5px 19px 0px rgba(191,191,191,0.47);
       }
       #inputField{
         width: 50%;
         resize: none;
+        height: auto;
+        overflow: hidden;
         border: none;
-        border-radius: 50px;
+        border-radius: 20px;
         outline: none;
-        background-color: #eeeeee;
+        background-color: #ffffff;
         padding: 7px;
+        padding-left: 15px;
+        padding-right: 15px;
         box-sizing: border-box;
         font-family: 'Poppins';
+      }
+
+      #submit_button{
+        width: 30px;
+        height: 30px;
+        background-color: #1c77ff;
+        outline: none;
+        border: none;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      #submit_button ion-icon{
+        color: white;
       }
     </style>
   </head>
@@ -158,8 +182,11 @@
 
 
         <form action="/chat" method="POST" id="chat_form" onsubmit="return submitForm(event)">
-          <textarea onkeydown="submitFormOnEnterPress(event)" id="inputField" placeholder="Message" rows="1"></textarea>
-          <input type="submit" />
+          <div></div>
+          <textarea oninput="auto_grow(this)" autofocus onkeydown="submitFormOnEnterPress(event)" id="inputField" placeholder="Message" rows="1"></textarea>
+          <button type="submit" id="submit_button">
+            <ion-icon name="send"></ion-icon>
+          </button>
         </form>
       </div>
 
@@ -193,10 +220,27 @@
 
       $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 
+      /*$("#inputField").css("height", document.getElementById("inputField").scrollHeight + "px");
+      $("#inputField").bind(function () {
+        this.setAttribute("style", "height:" + (this.scrollHeight) + "px;overflow-y:hidden;");
+      }).on("input", function(){
+        if(parseInt(this.style.height.split("p")[0]) < 100){
+          this.style.height = (this.scrollHeight) + "px";
+        }
+      });*/
+
       function submitFormOnEnterPress(e) {
         if(e.which == 13 && !e.shiftKey) { 
           submitForm(e)
         }
+      }
+      
+      function auto_grow(element) {
+        console.log(parseInt(element.style.height.split("p")[0]) < 100);
+        //if(parseInt(element.style.height.split("p")[0]) < 100){
+          element.style.height = "34px";
+          element.style.height = (element.scrollHeight)+"px";
+        //}        
       }
 
       socket.on("connect", () => {
@@ -212,16 +256,17 @@
             username: "{{ data.username }}",
             message: message
           });
-
+          $("#inputField").css("height", "34px")
           $("#inputField").val("").focus();
         }
       }
             
       socket.on("receive message", (msg)=>{
-        message = msg.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
+        //message = msg.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
+        message = msg.message;
 
         if(msg.username == '{{ data.username }}'){
-          $(".messages").append('<div class="message_container"><div class="message from_user"><p>' + message + "</p></div></div>");          
+          $(".messages").append('<div class="message_container"><div class="message from_user"><pre>' + message + "</pre></div></div>");          
         }
         else{
           $(".messages").append('<div class="message_container"><div class="message"><p>' + message + "</p></div></div>");
