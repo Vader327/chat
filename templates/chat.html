@@ -236,7 +236,7 @@
 
     <script>
       console.log(window.location.href);
-      var socket = io.connect(window.location.href);
+      var socket = io.connect(window.location.href, {transports: ['websocket']});
 
       $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 

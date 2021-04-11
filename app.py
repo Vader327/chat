@@ -1,13 +1,20 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, jsonify, request, redirect, url_for, render_template, session
 from flask_socketio import SocketIO, join_room, leave_room, send, emit, rooms
 import os
 import uuid
 import sqlite3
+#from eventlet import wsgi
+#import eventlet
+
+#eventlet.monkey_patch()
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['SECRET_KEY'] = 'jgr8e8943t894hg954f9846fh456'
-socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 #socketio = SocketIO(app)
 
 
@@ -252,4 +259,7 @@ cursor.execute("CREATE TABLE active_rooms (id INTEGER PRIMARY KEY, room_name TEX
 """
   
 if __name__ == "__main__":
-  socketio.run(app, debug=True)
+  #wsgi.server(eventlet.listen(('', 5000)), app)
+  #socketio.run(app, logger=True, engineio_logger=True)
+  socketio.run(app)
+  
