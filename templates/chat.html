@@ -24,15 +24,12 @@
       }
 
       .main{
-        display: flex;
         width: 100%;
         height: 100%;
       }
 
       .info_bar{
-        width: 30%;
         background-color: #f8f8f8;
-        display: none;
       }
 
       .messages_header{
@@ -46,10 +43,25 @@
         justify-content: space-evenly;
         align-items: center;
       }
+      .header-icon-button{
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        border: none;
+        border-radius: 50%;
+        outline: none;
+        background-color: transparent;
+        cursor: pointer;
+      }
+      .header-icon-button:hover{
+        background-color: #eaeaea;
+      }
       .messages_header ion-icon{
         font-size: 25px;
         color: #a5a5a5;
-        margin-right: 20px;
       }
 
       .header_participants{
@@ -169,9 +181,17 @@
           </div>
 
           <div class="header_icon_container">
-            <ion-icon style="font-size: 22px;" name="call"></ion-icon>
-            <ion-icon name="videocam"></ion-icon>
-            <ion-icon name="ellipsis-horizontal"></ion-icon>
+            <button class="header-icon-button">
+              <ion-icon style="font-size: 22px;" name="call"></ion-icon>
+            </button>
+
+            <button class="header-icon-button">
+              <ion-icon name="videocam"></ion-icon>
+            </button>
+
+            <button class="header-icon-button" id="info-bar-open-button">
+              <ion-icon name="ellipsis-horizontal"></ion-icon>
+            </button>
           </div>
         </div>
 
@@ -216,7 +236,7 @@
 
     <script>
       console.log(window.location.href);
-      var socket = io.connect(window.location.href);
+      //var socket = io.connect(window.location.href);
 
       $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 
@@ -242,6 +262,12 @@
           element.style.height = (element.scrollHeight)+"px";
         //}        
       }
+
+
+      document.getElementById('info-bar-open-button').addEventListener("click", ()=>{
+        $('.info_bar').css("display", "inline")
+      })
+
 
       socket.on("connect", () => {
         socket.emit("join");
