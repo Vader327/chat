@@ -236,18 +236,18 @@
 
     <script>
       console.log(window.location.href);
-      //var socket = io.connect(window.location.href);
+      var socket = io.connect(window.location.href);
 
       $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 
-      /*$("#inputField").css("height", document.getElementById("inputField").scrollHeight + "px");
+      $("#inputField").css("height", document.getElementById("inputField").scrollHeight + "px");
       $("#inputField").bind(function () {
         this.setAttribute("style", "height:" + (this.scrollHeight) + "px;overflow-y:hidden;");
       }).on("input", function(){
         if(parseInt(this.style.height.split("p")[0]) < 100){
           this.style.height = (this.scrollHeight) + "px";
         }
-      });*/
+      });
 
       function submitFormOnEnterPress(e) {
         if(e.which == 13 && !e.shiftKey) { 
