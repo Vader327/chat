@@ -57,7 +57,12 @@ def room():
     room = request.form['room']
     type_ = request.args.get('type')
 
+  print("\n\n")
+  print(request.args)
+  print(request.form)
+  print("\n\n")
 
+  
   if type_ == "join":
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
@@ -83,68 +88,6 @@ def room():
       con.commit()
 
     return jsonify({'status': 'success'})
-
-
-
-@app.route('/signup', methods=['POST'])
-def signup():
-  name = request.form['username']
-  password = request.form['password']
-
-  with sqlite3.connect("database.db") as con:
-    cur = con.cursor()
-    data = cur.execute("SELECT * FROM users WHERE name = ?", (name, )).fetchone()
-
-    if data and data[1].strip().lower() == name.strip().lower():
-      return jsonify({'status': 'account_already_exists'})
-
-    else:
-      session['username'] = name
-      session['password'] = password
-      session['logged_in'] = True
-
-      user_id = str(uuid.uuid4()).split("-")
-      user_id = "".join(user_id)
-      
-      with sqlite3.connect("database.db") as con:
-        cur = con.cursor()
-        cur.execute("INSERT INTO users (id, name,password) VALUES (?,?,?)", (user_id, name, password))
-        con.commit()
-
-      return jsonify({'status': 'success'})
-  
-
-
-@app.route('/login', methods=['POST'])
-def login():
-  name = request.form['username']
-  password = request.form['password']
-
-  with sqlite3.connect("database.db") as con:
-    cur = con.cursor()
-    data = cur.execute("SELECT * FROM users WHERE name = ?", (name, )).fetchone()
-
-    if data:
-      if data[2].strip().lower() == password.strip().lower():
-        session['username'] = name
-        session['password'] = password
-        session['logged_in'] = True
-        session['uid'] = data[0]
-
-        return jsonify({'status': 'success'})
-    
-      elif data[2].strip().lower() != password.strip().lower():
-        return jsonify({'status': 'incorrect_password'})
-    
-    else:
-      return jsonify({'status': 'account_doesnt_exists'})
-
-
-
-@app.route('/signout', methods=['POST'])
-def signout():
-  session.clear()
-  return redirect(url_for('index'))
 
 
 
@@ -187,6 +130,86 @@ def invite():
 
 
 
+
+
+
+############
+##  APIs  ##
+############
+
+
+
+@app.route('/api/signup', methods=['POST'])
+def signup():
+  name = request.form['username']
+  password = request.form['password']
+
+  with sqlite3.connect("database.db") as con:
+    cur = con.cursor()
+    data = cur.execute("SELECT * FROM users WHERE name = ?", (name, )).fetchone()
+
+    if data and data[1].strip().lower() == name.strip().lower():
+      return jsonify({'status': 'account_already_exists'})
+
+    else:
+      session['username'] = name
+      session['password'] = password
+      session['logged_in'] = True
+
+      user_id = str(uuid.uuid4()).split("-")
+      user_id = "".join(user_id)
+      
+      with sqlite3.connect("database.db") as con:
+        cur = con.cursor()
+        cur.execute("INSERT INTO users (id, name,password) VALUES (?,?,?)", (user_id, name, password))
+        con.commit()
+
+      return jsonify({'status': 'success'})
+  
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+  name = request.form['username']
+  password = request.form['password']
+
+  with sqlite3.connect("database.db") as con:
+    cur = con.cursor()
+    data = cur.execute("SELECT * FROM users WHERE name = ?", (name, )).fetchone()
+
+    if data:
+      if data[2].strip().lower() == password.strip().lower():
+        session['username'] = name
+        session['password'] = password
+        session['logged_in'] = True
+        session['uid'] = data[0]
+
+        return jsonify({'status': 'success'})
+    
+      elif data[2].strip().lower() != password.strip().lower():
+        return jsonify({'status': 'incorrect_password'})
+    
+    else:
+      return jsonify({'status': 'account_doesnt_exists'})
+
+
+
+@app.route('/api/signout', methods=['POST'])
+def signout():
+  session.clear()
+  return redirect(url_for('index'))
+
+
+
+
+
+
+###############
+##  SOCKETS  ##
+###############
+
+
+
 @socketio.on('join', namespace='/chat')
 def join():
   client_room = session.get('room')
@@ -206,57 +229,14 @@ def leave():
 
 @socketio.on('send message', namespace='/chat')
 def send_message(json):
-  print(rooms(request.sid))
   emit('receive message', json, namespace='/chat', room=session.get('room'))
 
 @socketio.on('typing_status', namespace='/chat')
 def send_status(json):
   emit('status', {'username': session.get('username'), 'type': 'typing', 'typing': json['typing']}, namespace='/chat', room=session.get('room'))
 
-"""
-README
-
-When person joins, print(rooms(request.sid)) prints an array of
-the socket id and the room name
-
-For example, if person from Room1 sends a message, the output is:
-['435v463vg6vfgv645675v7h8', 'Room1']
-
-And if person from Room2 sends a message, the output is:
-['t9r8h9gf7h58u56y54rey859', 'Room2']
-
-Store room in database so that they do not expire
 
 
-
-
-Person joins room
-  -  if room does not exist, it gets created in database
-
-Person gets added in database
-Messages are NOT stored in database, only transferred via sockets
-If person leaves room, person gets removed from database
-Participant list is retrieved from database
-Only App users and rooms are stored in server, rooms containg the participants in it.
-If user deletes account, remove user from room AND user list in database
-"""
-
-
-
-
-
-""" 
-@socketio.on('fetch_participants', namespace='/chat')
-def fetch_participants(methods=['GET', 'POST']):
-  socketio.emit('return_participants', namespace='/chat')
-
-con = sqlite3.connect("database.db")
-cursor = con.cursor()
-cursor.execute("CREATE TABLE active_rooms (id INTEGER PRIMARY KEY, room_name TEXT, participants TEXT)")
-"""
-  
 if __name__ == "__main__":
-  #wsgi.server(eventlet.listen(('', 5000)), app)
-  #socketio.run(app, logger=True, engineio_logger=True)
-  socketio.run(app)
+  socketio.run(app, debug=True)
   

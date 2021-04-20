@@ -9,7 +9,7 @@
   {% if not data.logged_in %}
     <h2>Signup</h2>
   
-    <form action="/signup" method="post" id="signupForm">
+    <form action="/api/signup" method="post" id="signupForm">
       <input name="username" type="text" placeholder="Username" />
       <input name="password" type="password" placeholder="Password" />
       <input type="submit" />
@@ -21,7 +21,7 @@
 
     <h2>Login</h2>
 
-    <form action="/login" method="post" id="loginForm">
+    <form action="/api/login" method="post" id="loginForm">
       <input name="username" type="text" placeholder="Username" />
       <input name="password" type="password" placeholder="Password" />
       <input type="submit" />
@@ -75,7 +75,7 @@
   <script>
     function signout(){
       $.ajax({
-        url: '/signout',
+        url: '/api/signout',
         type: 'post',
         data: {username: '{{username}}'},
         success: ()=>{
@@ -105,7 +105,7 @@
     $("#signupForm").on("submit", e => {
       e.preventDefault()
       $.ajax({
-        url: '/signup',
+        url: '/api/signup',
         type: 'post',
         data: $('#signupForm').serialize(),
         success: function(data){
@@ -131,7 +131,7 @@
     $("#loginForm").on("submit", e => {
       e.preventDefault()
       $.ajax({
-        url: '/login',
+        url: '/api/login',
         type: 'post',
         data: $('#loginForm').serialize(),
         success: function(data){
@@ -169,19 +169,14 @@
 
 
     $("#createRoomForm").on("submit", e => {
-      e.prevenDefault();
+      e.preventDefault();
+
       $.ajax({
         url: '/room?type=create',
         type: 'post',
         data: $('#createRoomForm').serialize(),
         success: function(data){
-          //change the status to add validdation in the server to ensure no punctation is there in the room name
-          if(data.status == "some_error_in_creating_room"){
-            /*var p = document.createElement("p")
-            p.innerText = "Account already exists!"
-            document.getElementById('error_box_signup').appendChild(p)*/
-          }
-          else if(data.status == "success"){
+          if(data.status == "success"){
             window.location.href = '/chat'
           }
         }
