@@ -26,17 +26,23 @@
       .main{
         width: 100%;
         height: 100%;
+        display: flex;
+        flex-direction: row;
       }
 
       .info_bar{
         background-color: #f8f8f8;
+        width: 0;
+        overflow: hidden;
       }
 
       .messages_header{
+        background-color: #ffffff;
         box-shadow: 0px 10px 19px 0px rgba(191,191,191,0.47);
         padding: 7px;
         display: flex;
         justify-content: space-between;
+        align-items: center;
       }
       .header_icon_container{
         display: flex;
@@ -197,7 +203,7 @@
           <div>
             <b>{{ data.room_name }}</b>
 
-            <div class="header_participants">  
+            <div class="header_participants">
               {% for user in data.participants %}
                 <p>{{ user }},&nbsp;</p>
               {% endfor %}
@@ -239,6 +245,14 @@
       </div>
 
       <div class="info_bar">
+        <div class="messages_header" style="margin-bottom: 10px;">
+          <b class="header_participants" style="flex-grow: 1;">Information</b>
+
+          <button class="header-icon-button" id="info-bar-close-button">
+            <ion-icon name="close"></ion-icon>
+          </button>
+        </div>
+
         <b>Room Code: </b> <p>{{ data.room }}</p>
 
         <div class="participants">
@@ -264,7 +278,6 @@
 
     <script>
       var socket = io.connect(window.location.href, {transports: ['websocket']});
-	    //var socket = io.connect(window.location.href);
 
       $("#invite_link").text(window.location.origin + '/invite?code={{ data.room }}')
 
@@ -273,6 +286,8 @@
           submitForm(e)
         }
       }
+
+      $('.info_bar .messages_header').css('height', $('.main_message_view .messages_header').height())
 
       document.getElementById('inputField').maxAllowedHeight = 150;
 
@@ -304,8 +319,15 @@
       }
 
 
-      document.getElementById('info-bar-open-button').addEventListener("click", ()=>{
-        $('.info_bar').css("display", "inline")
+      $('#info-bar-open-button').click(()=>{
+        if($('.info_bar').width() == 0){
+          $('.info_bar').animate({"width": "30%"});
+        }
+      })
+      $('#info-bar-close-button').click(()=>{
+        if($('.info_bar').width() != 0){
+          $('.info_bar').animate({"width": "0"});
+        }
       })
 
 
@@ -328,7 +350,6 @@
       }
             
       socket.on("receive message", (msg)=>{
-        //message = msg.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
         message = msg.message;
 
         if(msg.username == '{{ data.username }}'){

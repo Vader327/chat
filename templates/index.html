@@ -174,7 +174,7 @@
       $.ajax({
         url: '/room?type=create',
         type: 'post',
-        data: $('#createRoomForm').serialize(),
+        data: $('#createRoomForm').serialize(), 
         success: function(data){
           if(data.status == "success"){
             window.location.href = '/chat'

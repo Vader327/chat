@@ -57,11 +57,6 @@ def room():
     room = request.form['room']
     type_ = request.args.get('type')
 
-  print("\n\n")
-  print(request.args)
-  print(request.form)
-  print("\n\n")
-
   
   if type_ == "join":
     with sqlite3.connect("database.db") as con:
