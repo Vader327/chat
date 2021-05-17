@@ -6,71 +6,44 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 </head>
 <body>
-  {% if not data.logged_in %}
-    <h2>Signup</h2>
+  <h2>Welcome, {{ data.username }}</h2>
+
+  <h2>Create Room</h2>
   
-    <form action="/api/signup" method="post" id="signupForm">
-      <input name="username" type="text" placeholder="Username" />
-      <input name="password" type="password" placeholder="Password" />
-      <input type="submit" />
-    </form>
+  <form action="/room" method="post" id="createRoomForm">
+    <input name="room" type="text" placeholder="Enter Room Name" />
+    <input type="submit" />
+  </form>
 
-    <div id="error_box_signup"></div>
-    
-    <h2>Or</h2>
+  <h2>Or</h2>
 
-    <h2>Login</h2>
+  <h2>Join Room</h2>
+  
+  <form action="/room" method="post" id="joinRoomForm">
+    <input name="room" type="text" placeholder="Enter Room Code" />
+    <input type="submit" />
+  </form>
 
-    <form action="/api/login" method="post" id="loginForm">
-      <input name="username" type="text" placeholder="Username" />
-      <input name="password" type="password" placeholder="Password" />
-      <input type="submit" />
-    </form>
+  <p id="error_room_join"></p>
 
-    <div id="error_box_login"></div>
+  <br>
 
-  {% else %}
+  <b>Your Rooms:</b>
+  {% for room in data.rooms %}
+    <div style="width: 20%; display:flex; justify-content:space-between; margin-bottom: 10px">
+      <p>{{ room[1] }}</p>
 
-    <h2>Welcome, {{ data.username }}</h2>
+      <button onclick="join_room('room={{ room[0] }}')">
+        Join
+      </button>
+    </div>
+  {% endfor %}
 
-    <h2>Create Room</h2>
-    
-    <form action="/room" method="post" id="createRoomForm">
-      <input name="room" type="text" placeholder="Enter Room Name" />
-      <input type="submit" />
-    </form>
+  <br>
 
-    <h2>Or</h2>
-
-    <h2>Join Room</h2>
-    
-    <form action="/room" method="post" id="joinRoomForm">
-      <input name="room" type="text" placeholder="Enter Room Code" />
-      <input type="submit" />
-    </form>
-
-    <p id="error_room_join"></p>
-
-    <br>
-
-    <b>Your Rooms:</b>
-    {% for room in data.rooms %}
-      <div style="width: 20%; display:flex; justify-content:space-between; margin-bottom: 10px">
-        <p>{{ room[1] }}</p>
-
-        <button onclick="join_room('room={{ room[0] }}')">
-          Join
-        </button>
-      </div>
-    {% endfor %}
-
-    <br>
-
-    <button onclick="signout()">
-      Sign Out
-    </button>
-  {% endif %}
-
+  <button onclick="signout()">
+    Sign Out
+  </button>
 
   <script>
     function signout(){
@@ -99,67 +72,6 @@
         }
       });
     }
-
-    
-
-    $("#signupForm").on("submit", e => {
-      e.preventDefault()
-      $.ajax({
-        url: '/api/signup',
-        type: 'post',
-        data: $('#signupForm').serialize(),
-        success: function(data){
-          if(data.status == "account_already_exists"){
-            var p = document.createElement("p")
-            p.innerText = "Account already exists!"
-            document.getElementById('error_box_signup').appendChild(p)
-          }
-          else if(data.status == "success"){
-            if('{{ data.from_invite }}' == 'True'){
-              window.location.href = '/invite?code={{ data.invite_code }}'
-            }
-            else{
-              location.reload();
-            }
-          }
-        }
-      });
-    });
-
-
-
-    $("#loginForm").on("submit", e => {
-      e.preventDefault()
-      $.ajax({
-        url: '/api/login',
-        type: 'post',
-        data: $('#loginForm').serialize(),
-        success: function(data){
-          if(data.status == "account_doesnt_exists"){
-            var p = document.createElement("p")
-            p.innerText = "Account does not exists!"
-            document.getElementById('error_box_login').appendChild(p)
-          }
-
-          else if(data.status == "incorrect_password"){
-            var p = document.createElement("p")
-            p.innerText = "Incorrect Password!"
-            document.getElementById('error_box_login').appendChild(p)
-          }
-
-          else if(data.status == "success"){
-            if('{{ data.from_invite }}' == 'True'){
-              window.location.href = '/invite?code={{ data.invite_code }}'
-            }
-            else{
-              location.reload();
-            }
-          }
-        }
-      });
-    });
-
-
 
     $("#joinRoomForm").on("submit", e => {
       e.preventDefault();

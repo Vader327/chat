@@ -39,8 +39,18 @@ def index():
     data['password'] = password
     data['uid'] = uid
     data['logged_in'] = True
+    
+  else:
+    return redirect(url_for('auth', from_invite=data['from_invite'], invite_code=data['invite_code']))
   
   return render_template("index.html", data=data)
+
+
+
+@app.route('/authentication')
+def auth():
+  args = request.args
+  return render_template('authentication.html', from_invite=args.get('from_invite'), invite_code=args.get('invite_code'))
 
 
 
@@ -138,6 +148,12 @@ def invite():
 def signup():
   name = request.form['username']
   password = request.form['password']
+
+  if not name.strip():
+    return jsonify({'status': 'no_name'})
+  
+  elif not password.strip():
+    return jsonify({'status': 'no_password'})
 
   with sqlite3.connect("database.db") as con:
     cur = con.cursor()
