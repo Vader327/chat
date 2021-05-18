@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sign Up</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
@@ -29,20 +30,32 @@
       background-color: #eee;
     }
     .main {
-      position: fixed;
-      top: 35%;
+      position: absolute;
+      top: 45%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 30%;
+      width: 40% !important;
     }
+
+    @media only screen and (min-device-width: 768px) {
+      .main {
+        width: 30% !important;
+      }
+    }
+
     .card {
       padding: 16px;
+      width: 100% !important;
     }
     .card-title {
       margin-bottom: 32px !important;
     }
+    .card-text {
+      margin-top: 16px;
+      margin-bottom: 16px !important;
+    }
 
-    #error_box{
+    #error_box {
       position: absolute;
       width: 100%;
       margin-top: 16px;
@@ -50,7 +63,7 @@
   </style>
 
   <body>
-    <div class="main">
+    <div class="main container-fluid">
       <div class="card text-center">
         <div class="card-body">
           <h2 class="card-title mb-3">Sign Up</h2>
@@ -88,9 +101,11 @@
             />
           </form>
         </div>
+        <p class="card-text">
+          Already have an account? <a href="">Login instead.</a>
+        </p>
       </div>
-
-      <!--    
+      <!--
     <h2>Or</h2>
 
     <h2>Login</h2>
@@ -101,18 +116,22 @@
       <input type="submit" />
     </form>
     -->
-      <div class="alert alert-danger" style="display: none;" role="alert" id="error_box">
-      </div>
+      <div
+        class="alert alert-danger"
+        style="display: none"
+        role="alert"
+        id="error_box"
+      ></div>
     </div>
   </body>
 
   <script>
     function validateForm(data) {
       if (data[0]["value"].trim() == "") {
-        showError("Username cannot be empty!");
+        showError("Please enter a username");
         return false;
       } else if (data[1]["value"].trim() == "") {
-        showError("Password cannot be empty!");
+        showError("Please enter a password");
         return false;
       } else {
         return true;
