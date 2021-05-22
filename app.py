@@ -41,7 +41,7 @@ def index():
     data['logged_in'] = True
     
   else:
-    return redirect(url_for('auth', from_invite=data['from_invite'], invite_code=data['invite_code']))
+    return redirect(url_for('auth', from_invite = (data['from_invite'] if data['from_invite'] else None), invite_code=data['invite_code']))
   
   return render_template("index.html", data=data)
 

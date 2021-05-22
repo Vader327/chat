@@ -31,49 +31,78 @@
     }
     .main {
       position: absolute;
-      top: 45%;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 40% !important;
+      width: 40%;
+      text-align: center;
+    }
+    .main a {
+      text-decoration: none;
     }
 
-    @media only screen and (min-device-width: 768px) {
+    @media only screen and (min-device-width: 800px) {
       .main {
-        width: 30% !important;
+        width: 30%;
       }
     }
 
-    .card {
-      padding: 16px;
+    .main-card {
+      padding-top: 30px;
       width: 100% !important;
+      background-color: #fff;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 30px;
+
+      box-shadow: 0px 7px 32px -7px rgba(114, 114, 114, 0.74);
+      -webkit-box-shadow: 0px 7px 32px -7px rgba(114, 114, 114, 0.74);
+      -moz-box-shadow: 0px 7px 32px -7px rgba(114, 114, 114, 0.74);
     }
-    .card-title {
-      margin-bottom: 32px !important;
+    .card-form {
+      padding-left: 30px;
+      padding-right: 30px;
+      padding-top: 30px;
+      padding-bottom: 15px;
     }
-    .card-text {
-      margin-top: 16px;
-      margin-bottom: 16px !important;
+    .form-floating {
+      margin-bottom: 30px;
+    }
+
+    #submit-button {
+      background-color: #1c77ff;
+      border: none;
+      width: 100%;
+      padding: 15px;
+      color: #fff;
+      font-size: 20px;
+      transition: background-color 0.2s;
+    }
+    #submit-button:hover{
+      background-color: #3581f3;
+      transition: background-color 0.2s;
+    }
+    #submit-button:active{
+      background-color: #1058c4;
+      transition: background-color 0.1s;
     }
 
     #error_box {
       position: absolute;
       width: 100%;
-      margin-top: 16px;
+      margin-top: 50px;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
   </style>
 
   <body>
     <div class="main container-fluid">
-      <div class="card text-center">
-        <div class="card-body">
-          <h2 class="card-title mb-3">Sign Up</h2>
-          <form
-            action="/api/signup"
-            method="post"
-            id="signupForm"
-            class="d-grid gap-2"
-          >
-            <div class="form-floating mb-3">
+      <div class="main-card">
+        <h2>Create an account</h2>
+        <form action="/api/signup" method="post" id="signupForm">
+          <div class="card-form">
+            <div class="form-floating">
               <input
                 name="username"
                 type="text"
@@ -84,7 +113,7 @@
               <label for="username-input">Username</label>
             </div>
 
-            <div class="form-floating mb-3">
+            <div class="form-floating">
               <input
                 name="password"
                 type="password"
@@ -94,18 +123,24 @@
               />
               <label for="password-input">Password</label>
             </div>
-            <input
-              type="submit"
-              class="btn btn-primary btn-lg"
-              value="Sign Up"
-            />
-          </form>
-        </div>
-        <p class="card-text">
-          Already have an account? <a href="">Login instead.</a>
-        </p>
+          </div>
+          <input type="submit" id="submit-button" value="Sign Up" />
+        </form>
       </div>
-      <!--
+      <p>
+        Already have an account?
+        <a href="javascript:void(0);" onclick="hemlo();">Login instead.</a>
+      </p>
+
+      <div
+        class="alert alert-danger"
+        style="display: none"
+        role="alert"
+        id="error_box"
+      ></div>
+    </div>
+
+    <!--
     <h2>Or</h2>
 
     <h2>Login</h2>
@@ -116,24 +151,32 @@
       <input type="submit" />
     </form>
     -->
-      <div
-        class="alert alert-danger"
-        style="display: none"
-        role="alert"
-        id="error_box"
-      ></div>
-    </div>
   </body>
 
   <script>
+    function hemlo() {
+      console.log("HEMLOO");
+    }
+
     function validateForm(data) {
-      if (data[0]["value"].trim() == "") {
-        showError("Please enter a username");
-        return false;
-      } else if (data[1]["value"].trim() == "") {
-        showError("Please enter a password");
+      var username = data[0]["value"].trim();
+      var password = data[1]["value"].trim();
+
+      if (username == "") {
+        $("#username-input").addClass("is-invalid");
         return false;
       } else {
+        $("#username-input").removeClass("is-invalid");
+      }
+
+      if (password == "") {
+        $("#password-input").addClass("is-invalid");
+        return false;
+      } else {
+        $("#password-input").removeClass("is-invalid");
+      }
+
+      if (username != "" && password != "") {
         return true;
       }
     }
