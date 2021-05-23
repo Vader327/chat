@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -28,6 +28,8 @@
   <style>
     body {
       background-color: #eee;
+      overflow: auto;
+      font-family: 'Roboto';
     }
     .main {
       position: absolute;
@@ -41,9 +43,14 @@
       text-decoration: none;
     }
 
-    @media only screen and (min-device-width: 800px) {
+    @media only screen and (max-device-width: 900px) {
       .main {
-        width: 30%;
+        width: 80%;
+      }
+      @media screen and (orientation:landscape) {
+        .main{
+          transform: translate(-50%, 0%);
+        }
       }
     }
 
@@ -97,7 +104,7 @@
   </style>
 
   <body>
-    <div class="main container-fluid">
+    <div class="main">
       <div class="main-card">
         <h2>Create an account</h2>
         <form action="/api/signup" method="post" id="signupForm">
@@ -129,7 +136,7 @@
       </div>
       <p>
         Already have an account?
-        <a href="javascript:void(0);" onclick="hemlo();">Login instead.</a>
+        <a href="javascript:void(0);" onclick="changeToLogin();">Login instead.</a>
       </p>
 
       <div
@@ -154,11 +161,18 @@
   </body>
 
   <script>
-    function hemlo() {
-      console.log("HEMLOO");
+    function changeToLogin() {
+      $('h2').text("Log into your account");
+      $('#submit-button').prop("value", "Login");
+      $('form').prop({
+        'action': '/api/login',
+        'id': 'loginForm'
+      })
+      $('form')[0].reset();
     }
 
     function validateForm(data) {
+      console.log(data);
       var username = data[0]["value"].trim();
       var password = data[1]["value"].trim();
 
@@ -211,7 +225,8 @@
 
     $("#loginForm").on("submit", (e) => {
       e.preventDefault();
-      if (validateForm($("#loginForm").serializeArray())) {
+      console.log($("#loginForm"));
+      /*if (validateForm($("#loginForm").serializeArray())) {
         $.ajax({
           url: "/api/login",
           type: "post",
@@ -230,7 +245,7 @@
             }
           },
         });
-      }
+      }*/
     });
   </script>
 </html>
