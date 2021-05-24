@@ -1,0 +1,43 @@
+{% extends "authentication_layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block auth_text %}
+Log into your account
+{% endblock %}
+
+{% block button_text %}
+Login
+{% endblock %}
+
+{% block form_submit_function %}
+if (validateForm($("#submit-form").serializeArray())) {
+    $.ajax({
+        url: "/api/login",
+        type: "post",
+        data: $("#submit-form").serialize(),
+        success: function (data) {
+        if (data.status == "account_doesnt_exists") {
+            showError("Account does not exist!");
+        } else if (data.status == "incorrect_password") {
+            showError("Incorrect Password!");
+        } else if (data.status == "success") {
+            if ("{{ from_invite }}" == "True") {
+            window.location.href = "/invite?code={{ invite_code }}";
+            } else {
+            window.location.href = "/";
+            }
+        }
+        },
+    });
+}
+{% endblock %}
+
+{% block change_auth %}
+<p>
+    Don't have an account?
+    <a href="javascript:void(0);" onclick="changeAuthType();"
+      >Sign up instead.</a
+    >
+  </p>
+{% endblock %}

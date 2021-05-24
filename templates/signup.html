@@ -1,0 +1,41 @@
+{% extends "authentication_layout.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block auth_text %}
+Create an account
+{% endblock %}
+
+{% block button_text %}
+Sign Up
+{% endblock %}
+
+{% block form_submit_function %}
+if (validateForm($("#submit-form").serializeArray())) {
+    $.ajax({
+      url: "/api/signup",
+      type: "post",
+      data: $("#submit-form").serialize(),
+      success: function (data) {
+        if (data.status == "account_already_exists") {
+          showError("Account already exists!");
+        } else if (data.status == "success") {
+          if ("{{ from_invite }}" == "True") {
+            window.location.href = "/invite?code={{ invite_code }}";
+          } else {
+            window.location.href = "/";
+          }
+        }
+      },
+    });
+  }
+{% endblock %}
+
+{% block change_auth %}
+<p>
+    Already have an account?
+    <a href="javascript:void(0);" onclick="changeAuthType();"
+      >Login instead.</a
+    >
+  </p>
+{% endblock %}

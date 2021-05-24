@@ -436,7 +436,7 @@
       function leave() {
         socket.emit("leave");
         socket.disconnect();
-        window.location = window.location.href.replace("/chat", "");
+        window.location.href = '/';
       }
 
       var timeout = null;

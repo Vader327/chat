@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sign Up</title>
+    <title>{% block title %}{% endblock %}</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -29,7 +29,7 @@
     body {
       background-color: #eee;
       overflow: auto;
-      font-family: 'Roboto';
+      font-family: "Roboto";
     }
     .main {
       position: absolute;
@@ -47,8 +47,8 @@
       .main {
         width: 80%;
       }
-      @media screen and (orientation:landscape) {
-        .main{
+      @media screen and (orientation: landscape) {
+        .main {
           transform: translate(-50%, 0%);
         }
       }
@@ -85,11 +85,11 @@
       font-size: 20px;
       transition: background-color 0.2s;
     }
-    #submit-button:hover{
+    #submit-button:hover {
       background-color: #3581f3;
       transition: background-color 0.2s;
     }
-    #submit-button:active{
+    #submit-button:active {
       background-color: #1058c4;
       transition: background-color 0.1s;
     }
@@ -106,8 +106,8 @@
   <body>
     <div class="main">
       <div class="main-card">
-        <h2>Create an account</h2>
-        <form action="/api/signup" method="post" id="signupForm">
+        <h2>{% block auth_text %}{% endblock %}</h2>
+        <form action="/api/signup" method="post" id="submit-form">
           <div class="card-form">
             <div class="form-floating">
               <input
@@ -131,13 +131,13 @@
               <label for="password-input">Password</label>
             </div>
           </div>
-          <input type="submit" id="submit-button" value="Sign Up" />
+          <button type="submit" id="submit-button">
+            {% block button_text %}{% endblock %}
+          </button>
         </form>
       </div>
-      <p>
-        Already have an account?
-        <a href="javascript:void(0);" onclick="changeToLogin();">Login instead.</a>
-      </p>
+
+      {% block change_auth %}{% endblock %}
 
       <div
         class="alert alert-danger"
@@ -146,33 +146,16 @@
         id="error_box"
       ></div>
     </div>
-
-    <!--
-    <h2>Or</h2>
-
-    <h2>Login</h2>
-
-    <form action="/api/login" method="post" id="loginForm">
-      <input name="username" type="text" placeholder="Username" />
-      <input name="password" type="password" placeholder="Password" />
-      <input type="submit" />
-    </form>
-    -->
   </body>
 
   <script>
-    function changeToLogin() {
-      $('h2').text("Log into your account");
-      $('#submit-button').prop("value", "Login");
-      $('form').prop({
-        'action': '/api/login',
-        'id': 'loginForm'
-      })
-      $('form')[0].reset();
+    function changeAuthType() {
+      if (window.location.pathname == "/signup")
+        window.location.href = "/login";
+      else window.location.href = "/signup";
     }
 
     function validateForm(data) {
-      console.log(data);
       var username = data[0]["value"].trim();
       var password = data[1]["value"].trim();
 
@@ -200,52 +183,9 @@
       $("#error_box").show();
     }
 
-    $("#signupForm").on("submit", (e) => {
+    $("#submit-form").on("submit", (e) => {
       e.preventDefault();
-      if (validateForm($("#signupForm").serializeArray())) {
-        $.ajax({
-          url: "/api/signup",
-          type: "post",
-          data: $("#signupForm").serialize(),
-          success: function (data) {
-            console.log(data.status);
-            if (data.status == "account_already_exists") {
-              showError("Account already exists!");
-            } else if (data.status == "success") {
-              if ("{{ from_invite }}" == "True") {
-                window.location.href = "/invite?code={{ invite_code }}";
-              } else {
-                window.location.href = "/";
-              }
-            }
-          },
-        });
-      }
-    });
-
-    $("#loginForm").on("submit", (e) => {
-      e.preventDefault();
-      console.log($("#loginForm"));
-      /*if (validateForm($("#loginForm").serializeArray())) {
-        $.ajax({
-          url: "/api/login",
-          type: "post",
-          data: $("#loginForm").serialize(),
-          success: function (data) {
-            if (data.status == "account_doesnt_exists") {
-              showError("Account does not exist!");
-            } else if (data.status == "incorrect_password") {
-              showError("Incorrect Password!");
-            } else if (data.status == "success") {
-              if ("{{ from_invite }}" == "True") {
-                window.location.href = "/invite?code={{ invite_code }}";
-              } else {
-                window.location.href = "/";
-              }
-            }
-          },
-        });
-      }*/
+      eval(`{% block form_submit_function %}{% endblock %}`);
     });
   </script>
 </html>
