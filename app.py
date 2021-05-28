@@ -1,7 +1,7 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, jsonify, request, redirect, url_for, render_template, session
+from flask import Flask, jsonify, request, redirect, url_for, render_template, session, abort
 from flask_socketio import SocketIO, join_room, leave_room, send, emit, rooms
 import os
 import uuid
@@ -14,6 +14,17 @@ socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 #socketio = SocketIO(app, cors_allowed_origins='*')
 #socketio = SocketIO(app)
 
+
+"""
+# To block the service that prevents the heroku dyno from sleeping,
+# which polls the server every 5 minutes
+ip_ban_list = ['']
+@app.before_request
+def block_method():
+  ip = request.environ.get('REMOTE_ADDR')
+  if ip in ip_ban_list:
+      abort(403)
+"""
 
 
 @app.route('/')
