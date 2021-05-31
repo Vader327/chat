@@ -38,6 +38,7 @@
     <style>
       html {
         height: 100%;
+        overflow: hidden;
       }
       body {
         font-family: "Poppins";
@@ -50,12 +51,52 @@
         height: 100%;
         display: flex;
         flex-direction: row;
+        background-color: #000;
       }
 
-      .info_bar {
-        background-color: #e9e9e9;
+      #darkable {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        background-color: black;
+        opacity: 0;
+      }
+
+      .rooms-list {
+        background-color: #ffffff;
+      }
+
+      .info-bar {
+        background-color: #fff;
         width: 0;
         overflow-y: hidden;
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        z-index: 3;
+      }
+      .info-bar-content {
+        padding: 10px;
+      }
+
+      .info-bar-action-button {
+        background-color: inherit;
+        outline: none;
+        border: none;
+        border-radius: 5px;
+        width: 100%;
+        padding: 5px;
+        text-align: start;
+      }
+      .info-bar-action-button:hover {
+        background-color: #dfdfdf;
+      }
+      .info-bar-action-button:active {
+        background-color: #dadada;
       }
 
       .messages_header {
@@ -65,14 +106,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
-        position: fixed;
-        top: 0;
-        overflow: hidden;
-      }
-
-      .main_message_view .messages_header{
         width: 100%;
+        z-index: 1;
       }
 
       .header_icon_container {
@@ -113,15 +148,21 @@
 
       .main_message_view {
         width: 100%;
+        display: flex;
+        flex-direction: column;
       }
 
       .messages {
+        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         width: 100%;
-        padding: 80px 10px 80px 10px;
+        padding: 10px;
         box-sizing: border-box;
+        overflow-y: scroll;
+        max-height: 100vh;
+        background-color: #ffffff;
       }
 
       .messages b {
@@ -160,8 +201,6 @@
       }
 
       #chat_form {
-        position: fixed;
-        bottom: 0;
         background-color: #eee;
         width: 100%;
         bottom: 0;
@@ -172,6 +211,7 @@
         padding-left: 10%;
         padding-right: 10%;
         box-sizing: border-box;
+        z-index: 1;
         box-shadow: 0px -5px 19px 3px rgba(166, 166, 166, 0.47);
       }
 
@@ -230,6 +270,7 @@
 
   <body>
     <div class="main">
+      <div class="rooms-list"></div>
       <div class="main_message_view">
         <div class="messages_header">
           <div>
@@ -255,8 +296,6 @@
 
         <div class="messages"></div>
 
-        <p id="typingStatus"></p>
-
         <form
           action="/chat"
           method="POST"
@@ -281,16 +320,18 @@
           </button>
         </form>
       </div>
+    </div>
 
-      <div class="info_bar">
-        <div class="messages_header" style="margin-bottom: 10px">
-          <b style="flex-grow: 1">Information</b>
+    <div class="info-bar">
+      <div class="messages_header">
+        <b style="flex-grow: 1">Information</b>
 
-          <button class="header-icon-button" id="info-bar-close-button">
-            <ion-icon name="close"></ion-icon>
-          </button>
-        </div>
+        <button class="header-icon-button" id="info-bar-close-button">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
 
+      <div class="info-bar-content">
         <b>Room Code: </b>
         <p>{{ data.room }}</p>
 
@@ -307,7 +348,7 @@
         <b>Invite Link:</b>
         <p id="invite_link"></p>
 
-        <button onclick="leave()">Leave</button>
+        <button class="info-bar-action-button" onclick="leave()">Leave</button>
       </div>
     </div>
 
@@ -316,24 +357,25 @@
         transports: ["websocket"],
       });
 
-      var participants = eval("{{ data.participants|safe }}");
-
-      for (var user in participants) {
-        $(".header_participants")[0].append(
-          participants[user].trim() +
-            (user == participants.length - 1 ? "" : ", ")
-        );
-      }
-
       $(document).ready(function () {
+        var participants = eval("{{ data.participants|safe }}");
+        for (var user in participants) {
+          $(".header_participants")[0].append(
+            participants[user].trim() +
+              (user == participants.length - 1 ? "" : ", ")
+          );
+        }
+        for (var room of eval("{{ data.all_rooms|safe }}")) {
+          $(".rooms-list").append("<div>" + room.id + "</div>");
+        }
+
         /*$("#invite_link").text(
           window.location.origin + "/invite?code={{ data.room }}"
         );*/
         document.getElementById("inputField").maxAllowedHeight = 150;
-
         auto_grow(document.getElementById("inputField"));
 
-        $(".info_bar .messages_header").height(
+        $(".info-bar .messages_header").height(
           $(".main_message_view .messages_header").height()
         );
       });
@@ -371,13 +413,18 @@
       }
 
       $("#info-bar-open-button").click(() => {
-        if ($(".info_bar").width() == 0) {
-          $(".info_bar").animate({ width: "30%" }, 300);
+        $(".main").append("<div id='darkable'></div>");
+        if ($(".info-bar").width() == 0) {
+          $(".info-bar").animate({ width: "20%" }, 300);
+          $("#darkable").animate({ opacity: 0.4 }, 300);
         }
       });
       $("#info-bar-close-button").click(() => {
-        if ($(".info_bar").width() != 0) {
-          $(".info_bar").animate({ width: "0%" }, 300);
+        if ($(".info-bar").width() != 0) {
+          $(".info-bar").animate({ width: "0%" }, 300);
+          $("#darkable").animate({ opacity: 0 }, 300, () => {
+            $("#darkable").remove();
+          });
         }
       });
 
@@ -387,10 +434,10 @@
 
       function submitForm(e) {
         e.preventDefault();
-        let message = $("#inputField").val();
+        let message = $("#inputField").val().trim();
 
-        if (message.trim() != "") {
-          socket.emit("send message", {
+        if (message != "") {
+          socket.emit("send_message", {
             username: "{{ data.username }}",
             message: message,
           });
@@ -399,7 +446,7 @@
         }
       }
 
-      socket.on("receive message", (msg) => {
+      socket.on("receive_message", (msg) => {
         message = msg.message;
 
         if (msg.username == "{{ data.username }}") {
@@ -419,7 +466,11 @@
 
       socket.on("status", (msg) => {
         if (msg.type == "join") {
-          $(".messages").append("<b style='margin-bottom: 10px'>" + msg.username + " Joined the Chat</b>");
+          $(".messages").append(
+            "<b style='margin-bottom: 10px'>" +
+              msg.username +
+              " Joined the Chat</b>"
+          );
 
           pariticpants_list = [];
           for (var element of document.getElementsByClassName("participants")[0]
@@ -437,10 +488,14 @@
           msg.type == "typing" &&
           msg.username != "{{ data.username }}"
         ) {
-          if (msg.typing) {
-            $("#typingStatus").text(msg.username + " is typing...");
-          } else {
-            $("#typingStatus").text("");
+          if (msg.typing && !document.getElementById("typingStatus")) {
+            $(".messages").append(
+              `<div class="message_container">
+                <div class="message" id="typingStatus">${msg.username} is typing...</div>
+              </div>`
+            );
+          } else if (!msg.typing) {
+            $("#typingStatus").parent().remove();
           }
         }
       });

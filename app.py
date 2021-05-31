@@ -17,7 +17,7 @@ socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 
 """
 # To block the service that prevents the heroku dyno from sleeping,
-# which polls the server every 5 minutes
+# which polls the server every 5 minutes -
 ip_ban_list = ['']
 @app.before_request
 def block_method():
@@ -29,7 +29,7 @@ def block_method():
 
 @app.route('/')
 def index():
-  name = session.get('username')
+  username = session.get('username')
   password = session.get('password')
   uid = session.get('uid')
   invite_code = request.args.get('invite_code')
@@ -43,10 +43,10 @@ def index():
   if session.get('logged_in'):
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
-      all_rooms = cur.execute("SELECT id, name FROM rooms WHERE users LIKE '%" + name + "%'").fetchall()
+      all_rooms = cur.execute("SELECT id, name FROM rooms WHERE users LIKE '%" + username + "%'").fetchall()
       data['rooms'] = all_rooms
 
-    data['username'] = name
+    data['username'] = username
     data['password'] = password
     data['uid'] = uid
     data['logged_in'] = True
@@ -122,16 +122,22 @@ def chat():
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
       data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
-
       users_in_room = data[0].split(",")
+
+      all_rooms = []
+      for i in cur.execute("SELECT * FROM rooms WHERE users LIKE '%" + username + "%'").fetchall():
+        all_rooms.append({
+          'id': i[0],
+          'name': i[1],
+          'participants': i[2],
+        })
 
       if username not in users_in_room:
         users_in_room.append(username)
-
         cur.execute("UPDATE rooms SET users = ? WHERE id = ?", (','.join(users_in_room), room))
         con.commit()
 
-    data = {'username': username, 'room': room, 'room_name': room_name, 'participants': users_in_room}
+    data = {'username': username, 'room': room, 'room_name': room_name, 'participants': users_in_room, 'all_rooms': all_rooms}
     return render_template("chat.html", data=data)
 
   else:
@@ -254,9 +260,9 @@ def leave():
 
 
 
-@socketio.on('send message', namespace='/chat')
+@socketio.on('send_message', namespace='/chat')
 def send_message(json):
-  emit('receive message', json, namespace='/chat', room=session.get('room'))
+  emit('receive_message', json, namespace='/chat', room=session.get('room'))
 
 @socketio.on('typing_status', namespace='/chat')
 def send_status(json):
