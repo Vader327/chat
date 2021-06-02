@@ -265,6 +265,12 @@
       #submit_button ion-icon {
         color: white;
       }
+
+      @media only screen and (max-device-width: 900px) {
+        .rooms-list {
+          display: none;
+        }
+      }
     </style>
   </head>
 
@@ -482,7 +488,7 @@
           }
         } else if (msg.type == "leave") {
           $(".messages").append(
-            "<div><b>" + msg.username + " has left the room.</b></div>"
+            "<div><b>" + msg.username + " has left the room</b></div>"
           );
         } else if (
           msg.type == "typing" &&
