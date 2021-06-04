@@ -271,5 +271,5 @@ def send_status(json):
 
 
 if __name__ == "__main__":
-  socketio.run(app, debug=True, host="192.168.0.8")
-  
+  app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+  socketio.run(app, debug=True)
