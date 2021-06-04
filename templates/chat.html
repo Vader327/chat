@@ -240,26 +240,39 @@
 
         if (msg.username == "{{ data.username }}") {
           $(".messages").append(
-            '<div class="message_container"><div class="message from_user">' +
-              message +
-              "</div></div>"
+            `<div class="message_container">
+              <div class="message from_user">${message}</div>
+            </div>`
           );
         } else {
-          /*console.log(
-            document.getElementsByClassName("messages")[0].lastChild
-          );*/
-          if (document.getElementById("typingStatus")) {
-            $(
-              `<div class="message_container">
-              <div class="message"><b>${msg.username}</b><br>${message}</div>
-            </div>`
-            ).insertBefore($("#typingStatus").parent());
+          var children =
+            document.getElementsByClassName("messages")[0].childNodes;
+
+          messageToAppend = (nameIsSame) =>
+            `<div class="message_container">
+              <div class="message">` +
+            (nameIsSame
+              ? ""
+              : `<b class="message_name">${msg.username}</b><br>`) +
+            `${message}</div>
+            </div>`;
+
+          var condition;
+          var messageQueryElement = $(`.message:has(b), .from_user`);
+          var lastSuitableElement = messageQueryElement.toArray()[messageQueryElement.length - 1];
+
+          if (lastSuitableElement && lastSuitableElement.tagName == "DIV" && lastSuitableElement.querySelector("b")) {
+            condition = lastSuitableElement.querySelector("b").textContent == msg.username;
           } else {
-            $(".messages").append(
-              `<div class="message_container">
-              <div class="message"><b>${msg.username}</b><br>${message}</div>
-            </div>`
+            condition = false;
+          }
+
+          if (document.getElementById("typingStatus")) {
+            $(messageToAppend(condition)).insertBefore(
+              $("#typingStatus").parent()
             );
+          } else {
+            $(".messages").append(messageToAppend(condition));
           }
         }
         scrollToBottom();
