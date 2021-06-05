@@ -13,7 +13,6 @@ body {
   height: 100%;
   display: flex;
   flex-direction: row;
-  background-color: #000;
 }
 
 #darkable {
@@ -30,6 +29,17 @@ body {
 .rooms-list {
   background-color: #fafafa;
   width: 20%;
+}
+.room{
+  padding: 10px;
+  background-color: #eaeaea;
+  margin: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#active-room{
+  background-color: #1c77ff;
+  color: #ffffff;
 }
 
 .info-bar {
@@ -52,14 +62,16 @@ body {
   border: none;
   border-radius: 5px;
   width: 100%;
-  padding: 5px;
+  padding: 7px;
   text-align: start;
+  font-family: "Poppins";
+  font-size: 16px;
 }
 .info-bar-action-button:hover {
-  background-color: #dfdfdf;
+  background-color: #eee;
 }
 .info-bar-action-button:active {
-  background-color: #dadada;
+  background-color: #dfdfdf;
 }
 
 .messages_header {
@@ -71,6 +83,7 @@ body {
   align-items: center;
   width: 100%;
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .header_icon_container {
@@ -139,12 +152,13 @@ body {
 
 .message {
   background-color: #efefef;
-  margin-bottom: 10px;
+  margin-top: 15px;
+  margin-bottom: 4px;
   float: left;
   padding: 7px;
   padding-left: 10px;
   padding-right: 10px;
-  border-radius: 20px;
+  border-radius: 15px;
   max-width: 60%;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -155,13 +169,18 @@ body {
   font-family: "Poppins";
 }
 .message b {
-  color: #000;
+  color: black;
+}
+
+.repeated{
+  margin-top: 0px;
 }
 
 .from_user {
   float: right;
   color: white;
   background-color: #1c77ff;
+  margin-top: 0px;
 }
 .from_user div {
   color: #ffffff;
@@ -186,7 +205,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f3f3f3;
+  background-color: #eeeeee;
   width: 90%;
   padding: 7px;
   border-radius: 20px;
@@ -195,25 +214,26 @@ body {
   box-sizing: border-box;
 }
 #inputField {
-  background-color: #f3f3f3;
+  background-color: #eeeeee;
   width: 100%;
   resize: none;
   border: none;
   outline: none;
   font-family: "Poppins";
   padding: 0;
+  font-size: 15px;
 }
 #inputField::-webkit-scrollbar {
   width: 14px;
 }
 #inputField::-webkit-scrollbar-track {
-  background-color: #f3f3f3;
+  background-color: #eeeeee;
   border-radius: 14px;
 }
 #inputField::-webkit-scrollbar-thumb {
-  background-color: #dddddd;
+  background-color: #dadada;
   border-radius: 14px;
-  border: 4px solid #f3f3f3;
+  border: 4px solid #eeeeee;
 }
 #inputField::-webkit-scrollbar-button {
   display: none;
@@ -230,6 +250,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  margin-left: 5px;
 }
 #submit_button ion-icon {
   color: white;
