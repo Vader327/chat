@@ -132,7 +132,7 @@
     </div>
 
     <script>
-      var socket = io.connect(window.location.href, {
+      var socket = io.connect('/chat', {
         transports: ["websocket"],
       });
 
@@ -146,11 +146,8 @@
         }
 
         for (let room of eval("{{ data.all_rooms|safe }}")) {
-          console.log(room.id);
           $(".rooms-list").append(
-            `<div class='room' id='${
-              room.id == "{{ data.room }}" ? "active-room" : ""
-            }'>` +
+            `<div class='room${room.id == "{{ data.room }}" ? " active-room" : ""}' room-code='${room.id}' onclick='changeRoom(this)'>` +
               room.name +
               "</div>"
           );
@@ -159,6 +156,7 @@
         /*$("#invite_link").text(
           window.location.origin + "/invite?code={{ data.room }}"
         );*/
+
         document.getElementById("inputField").maxAllowedHeight = 150;
         auto_grow(document.getElementById("inputField"));
 
@@ -214,6 +212,15 @@
           });
         }
       });
+
+      function changeRoom(element) {
+        var code = element.getAttribute("room-code");
+        if("{{ data.room }}" != code){
+          socket.emit("join", {id: code}, ()=>{
+            window.location.href = '/chat/' + code;
+          });
+        }
+      }
 
       socket.on("connect", () => {
         socket.emit("join");

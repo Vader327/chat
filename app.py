@@ -30,11 +30,9 @@ def block_method():
 @app.route('/')
 def index():
   username = session.get('username')
-  password = session.get('password')
-  uid = session.get('uid')
   invite_code = request.args.get('invite_code')
 
-  data={'username': None, 'password': None, 'uid': None, 'logged_in': False, 'rooms': [], 'from_invite': False, 'invite_code': None}
+  data={'username': None, 'logged_in': False, 'rooms': [], 'from_invite': False, 'invite_code': None}
 
   if invite_code:
     data['from_invite'] = True
@@ -47,8 +45,6 @@ def index():
       data['rooms'] = all_rooms
 
     data['username'] = username
-    data['password'] = password
-    data['uid'] = uid
     data['logged_in'] = True
     
   else:
@@ -112,13 +108,13 @@ def room():
 
 
 
-@app.route('/chat', methods=['GET', 'POST'])
-def chat():
+@app.route('/chat/<room>', methods=['GET', 'POST'])
+def chat(room):
   username = session.get('username')
-  room = session.get('room')
   room_name = session.get('room_name')
+  session['room'] = room
 
-  if session.get('logged_in') and room:    
+  if session.get('logged_in'):
     with sqlite3.connect("database.db") as con:
       cur = con.cursor()
       data = cur.execute("SELECT users FROM rooms WHERE id = ?", (room, )).fetchone()
@@ -186,7 +182,6 @@ def signup_api():
 
     else:
       session['username'] = name
-      session['password'] = password
       session['logged_in'] = True
 
       user_id = str(uuid.uuid4()).split("-")
@@ -194,7 +189,7 @@ def signup_api():
       
       with sqlite3.connect("database.db") as con:
         cur = con.cursor()
-        cur.execute("INSERT INTO users (id, name,password) VALUES (?,?,?)", (user_id, name, password))
+        cur.execute("INSERT INTO users (id,name,password) VALUES (?,?,?)", (user_id, name, password))
         con.commit()
 
       return jsonify({'status': 'success'})
@@ -213,9 +208,7 @@ def login_api():
     if data:
       if data[2].strip().lower() == password.strip().lower():
         session['username'] = name
-        session['password'] = password
         session['logged_in'] = True
-        session['uid'] = data[0]
 
         return jsonify({'status': 'success'})
     
@@ -244,11 +237,20 @@ def signout():
 
 
 @socketio.on('join', namespace='/chat')
-def join():
+def join(json=None):
+  if json:
+    room = json['id']
+    session['room'] = room
+    with sqlite3.connect("database.db") as con:
+      cur = con.cursor()
+      data = cur.execute("SELECT name FROM rooms WHERE id = ?", (room, )).fetchone()
+      session['room_name'] = data[0]
+  
   client_room = session.get('room')
   join_room(client_room, namespace='/chat')
 
-  emit('status', {'username': session.get('username'), 'type': 'join'}, namespace='/chat', room=client_room)
+  if not json:
+    emit('status', {'username': session.get('username'), 'type': 'join'}, namespace='/chat', room=client_room)
   
 
 
@@ -267,10 +269,12 @@ def send_message(json):
 @socketio.on('typing_status', namespace='/chat')
 def send_status(json):
   emit('status', {'username': session.get('username'), 'type': 'typing', 'typing': json['typing']}, namespace='/chat', room=session.get('room'))
-
-
-
+"""
+@socketio.on('change_room', namespace='/chat')
+def change_room(json):
+  emit('status', {'username': session.get('username'), 'type': 'typing', 'typing': json['typing']}, namespace='/chat', room=session.get('room'))
+"""
 if __name__ == "__main__":
   app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-  #socketio.run(app, debug=True)
-  socketio.run(app, debug=True, host="0.0.0.0")
+  socketio.run(app, debug=True)
+  #socketio.run(app, debug=True, host="0.0.0.0")

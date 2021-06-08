@@ -67,7 +67,7 @@
            $('#error_room_join').text("Room does not exist!")
           }
           else if(data.status == "success"){
-            window.location.href = '/chat'
+            window.location.href = '/chat/' + code.split("=")[1]
           }
         }
       });
@@ -89,7 +89,8 @@
         data: $('#createRoomForm').serialize(), 
         success: function(data){
           if(data.status == "success"){
-            window.location.href = '/chat'
+            //Temporary solution, fix later
+            window.location.href = '/chat' + $('#createRoomForm').serialize().split("=")[1]
           }
         }
       });

@@ -30,14 +30,19 @@ body {
   background-color: #fafafa;
   width: 20%;
 }
+.rooms-list .messages_header{
+  border-bottom: 0.5px solid lightgray;
+}
 .room{
   padding: 10px;
-  background-color: #eaeaea;
-  margin: 10px;
-  border-radius: 5px;
+  background-color: #fff;
   cursor: pointer;
+  border-bottom: 0.5px solid lightgray;
 }
-#active-room{
+.room:hover:not(.active-room){
+  background-color: #eaeaea;
+}
+.active-room{
   background-color: #1c77ff;
   color: #ffffff;
 }
