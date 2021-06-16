@@ -44,19 +44,19 @@
   <body>
     <div class="main">
       <div class="rooms-list">
-        <div class="messages_header">
+        <div class="messages-header">
           <b>{{ data.username }}</b>
         </div>
       </div>
-      <div class="main_message_view">
-        <div class="messages_header">
+      <div class="main-message-view">
+        <div class="messages-header">
           <div>
             <b>{{ data.room_name }}</b>
 
-            <div class="header_participants"></div>
+            <div class="header-participants"></div>
           </div>
 
-          <div class="header_icon_container">
+          <div class="header-icon-container">
             <button class="header-icon-button">
               <ion-icon style="font-size: 22px" name="call"></ion-icon>
             </button>
@@ -76,7 +76,7 @@
         <form
           action="/chat"
           method="POST"
-          id="chat_form"
+          id="chat-form"
           onsubmit="return submitForm(event)"
         >
           <div></div>
@@ -92,14 +92,14 @@
             ></textarea>
           </div>
 
-          <button type="submit" id="submit_button">
+          <button type="submit" id="submit-button">
             <ion-icon name="send"></ion-icon>
           </button>
         </form>
       </div>
 
       <div class="info-bar">
-        <div class="messages_header">
+        <div class="messages-header">
           <b>Information</b>
 
           <button class="header-icon-button" id="info-bar-close-button">
@@ -132,14 +132,15 @@
     </div>
 
     <script>
-      var socket = io.connect('/chat', {
+      var socket = io.connect("/chat", {
         transports: ["websocket"],
       });
+      var currentUser = "{{ data.username }}";
 
       $(document).ready(function () {
         var participants = eval("{{ data.participants|safe }}");
         for (var user in participants) {
-          $(".header_participants")[0].append(
+          $(".header-participants")[0].append(
             participants[user].trim() +
               (user == participants.length - 1 ? "" : ", ")
           );
@@ -147,7 +148,9 @@
 
         for (let room of eval("{{ data.all_rooms|safe }}")) {
           $(".rooms-list").append(
-            `<div class='room${room.id == "{{ data.room }}" ? " active-room" : ""}' room-code='${room.id}' onclick='changeRoom(this)'>` +
+            `<div class='room${
+              room.id == "{{ data.room }}" ? " active-room" : ""
+            }' room-code='${room.id}' onclick='changeRoom(this)'>` +
               room.name +
               "</div>"
           );
@@ -158,18 +161,12 @@
         );*/
 
         document.getElementById("inputField").maxAllowedHeight = 150;
-        auto_grow(document.getElementById("inputField"));
+        document.getElementById("inputField").style.height = "23px";
 
-        $(".rooms-list .messages_header, .info-bar .messages_header").height(
-          $(".main_message_view .messages_header").height()
+        $(".rooms-list .messages-header, .info-bar .messages-header").height(
+          $(".main-message-view .messages-header").height()
         );
       });
-
-      function submitFormOnEnterPress(e) {
-        if (e.which == 13 && !e.shiftKey) {
-          submitForm(e);
-        }
-      }
 
       function getOffset(textarea) {
         let style = window.getComputedStyle(textarea, null),
@@ -215,9 +212,9 @@
 
       function changeRoom(element) {
         var code = element.getAttribute("room-code");
-        if("{{ data.room }}" != code){
-          socket.emit("join", {id: code}, ()=>{
-            window.location.href = '/chat/' + code;
+        if ("{{ data.room }}" != code) {
+          socket.emit("join", { id: code }, () => {
+            window.location.href = "/chat/" + code;
           });
         }
       }
@@ -226,14 +223,33 @@
         socket.emit("join");
       });
 
+      function submitFormOnEnterPress(e) {
+        if (e.which == 13 && !e.shiftKey) {
+          submitForm(e);
+        }
+      }
+
+      function formatAMPM(date) {
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        return `${hours}:${minutes} ${ampm}`;
+      }
+
       function submitForm(e) {
         e.preventDefault();
+
+        let messageTime = formatAMPM(new Date(new Date().toISOString()));
         let message = $("#inputField").val().trim();
 
         if (message != "") {
           socket.emit("send_message", {
-            username: "{{ data.username }}",
+            username: currentUser,
             message: message,
+            time: messageTime,
           });
           $("#inputField").css("height", "auto");
           $("#inputField").val("").focus();
@@ -251,29 +267,37 @@
 
       socket.on("receive_message", (msg) => {
         message = msg.message;
+        username = msg.username;
+        
+        let lastElement = $(".message:not(#typing-status):not(.status)").last();
+        let lastElementHasTime;
 
-        if (msg.username == "{{ data.username }}") {
+        if(lastElement.find(".message-time").text() == msg.time && ((!lastElement.hasClass("from-user") && msg.username != currentUser) || (lastElement.hasClass("from-user") && msg.username == currentUser))){
+          lastElement.removeClass("has-time");
+        }
+
+        if (msg.username == currentUser) {
           $(".messages").append(
-            `<div class="message_container">
-              <div class="message from_user">${message}</div>
+            `<div class="message-container">
+              <div class="message from-user has-time">${message}<p class="message-time">${msg.time}</p></div>
             </div>`
           );
         } else {
-          if (!document.getElementById("typingStatus")) {
-            $("#typingStatus").parent().remove();
+          if (!document.getElementById("typing-status")) {
+            $("#typing-status").parent().remove();
           }
 
           messageToAppend = (nameIsSame) =>
-            `<div class="message_container">
-              <div class="message${nameIsSame ? " repeated" : ""}">` +
+            `<div class="message-container">
+              <div class="message has-time${nameIsSame ? " repeated" : ""}">` +
             (nameIsSame
               ? ""
               : `<b class="message_name">${msg.username}</b><br>`) +
-            `${message}</div>
+            `${message}<p class="message-time">${msg.time}</p></div>
             </div>`;
 
           let condition;
-          let messageQueryElement = $(".message:has(b), .from_user");
+          let messageQueryElement = $(".message:has(b), .from-user");
           let lastSuitableElement =
             messageQueryElement.toArray()[messageQueryElement.length - 1];
 
@@ -289,21 +313,22 @@
             condition = false;
           }
 
-          if (document.getElementById("typingStatus")) {
+          if (document.getElementById("typing-status")) {
             $(messageToAppend(condition)).insertBefore(
-              $("#typingStatus").parent()
+              $("#typing-status").parent()
             );
           } else {
             $(".messages").append(messageToAppend(condition));
           }
         }
+
         scrollToBottom();
       });
 
       socket.on("status", (msg) => {
         if (msg.type == "join") {
           $(".messages").append(
-            "<b style='margin-bottom: 10px'>" +
+            "<b class='status'>" +
               msg.username +
               " has joined the room</b>"
           );
@@ -322,16 +347,16 @@
           );
         } else if (
           msg.type == "typing" &&
-          msg.username != "{{ data.username }}"
+          msg.username != currentUser
         ) {
-          if (msg.typing && !document.getElementById("typingStatus")) {
+          if (msg.typing && !document.getElementById("typing-status")) {
             $(".messages").append(
-              `<div class="message_container">
-                <div class="message" id="typingStatus">${msg.username} is typing...</div>
+              `<div class="message-container">
+                <div class="message" id="typing-status">${msg.username} is typing...</div>
               </div>`
             );
           } else if (!msg.typing) {
-            $("#typingStatus").parent().remove();
+            $("#typing-status").parent().remove();
           }
         }
         scrollToBottom();
