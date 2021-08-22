@@ -46,9 +46,29 @@
       <div class="rooms-list">
         <div class="messages-header">
           <b>{{ data.username }}</b>
+          <div class="dropdown">
+            <button
+              class="header-icon-button dropdown-button"
+              onclick="toggleDropDown()"
+            >
+              <ion-icon name="ellipsis-horizontal"></ion-icon>
+            </button>
+            <div class="dropdown-content">
+              <button class="info-bar-action-button" onclick="openModal(0)">
+                Join Room
+              </button>
+              <button class="info-bar-action-button" onclick="openModal(1)">
+                Create Room
+              </button>
+              <button class="info-bar-action-button" onclick="signout()">
+                Sign Out
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="main-message-view">
+        {% if data.room %}
         <div class="messages-header">
           <div>
             <b>{{ data.room_name }}</b>
@@ -96,6 +116,50 @@
             <ion-icon name="send"></ion-icon>
           </button>
         </form>
+
+        {% endif %}
+
+        <div class="modal-container">
+          <div class="room-modal">
+            <div class="modal-buttons-container">
+              <button
+                class="tablinks"
+                onclick="changeModalTab(event, 'join-tab')"
+              >
+                Join
+              </button>
+              <button
+                class="tablinks"
+                onclick="changeModalTab(event, 'create-tab')"
+              >
+                Create
+              </button>
+            </div>
+
+            <div id="join-tab" class="tabcontent">
+              <h2>Join A Room</h2>
+              <form action="/room" method="post" id="join-room-form">
+                <input name="room" type="text" placeholder="Room Code" />
+                <button type="submit" class="room-submit-button">Join</button>
+              </form>
+              <button type="submit" class="room-submit-button modal-cancel">
+                Cancel
+              </button>
+            </div>
+
+            <div id="create-tab" class="tabcontent">
+              <h2>Create A Room</h2>
+              <form action="/room" method="post" id="create-room-form">
+                <input name="room" type="text" placeholder="Room Name" />
+                <button type="submit" class="room-submit-button">Create</button>
+              </form>
+              <button type="submit" class="room-submit-button modal-cancel">
+                Cancel
+              </button>
+            </div>
+          </div>
+          <div class="error-box"></div>
+        </div>
       </div>
 
       <div class="info-bar">
@@ -137,36 +201,89 @@
       });
       var currentUser = "{{ data.username }}";
 
+      function toggleDropDown() {
+        document
+          .getElementsByClassName("dropdown-content")[0]
+          .classList.toggle("dropdown-visible");
+      }
+
+      function changeModalTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+
+      window.onclick = function (event) {
+        if (
+          !document
+            .getElementsByClassName("dropdown-button")[0]
+            .contains(event.target)
+        ) {
+          var openDropdown =
+            document.getElementsByClassName("dropdown-content")[0];
+          if (openDropdown.classList.contains("dropdown-visible")) {
+            openDropdown.classList.remove("dropdown-visible");
+          }
+        }
+      };
+
       $(document).ready(function () {
-        var participants = eval("{{ data.participants|safe }}");
-        for (var user in participants) {
-          $(".header-participants")[0].append(
-            participants[user].trim() +
-              (user == participants.length - 1 ? "" : ", ")
-          );
+        if ("{{ data.room }}" != "") {
+          var participants = eval("{{ data.participants|safe }}");
+          for (var user in participants) {
+            $(".header-participants")[0].append(
+              participants[user].trim() +
+                (user == participants.length - 1 ? "" : ", ")
+            );
+          }
+
+          $(".modal-container").hide();
+
+          for (let room of eval("{{ data.all_rooms|safe }}")) {
+            $(".rooms-list").append(
+              `<div class='room${
+                room.id == "{{ data.room }}" ? " active-room" : ""
+              }' room-code='${room.id}' onclick='changeRoom(this)'>` +
+                room.name +
+                "</div>"
+            );
+          }
+
+          /*$("#invite_link").text(
+            window.location.origin + "/invite?code={{ data.room }}"
+          );*/
+
+          document.getElementById("inputField").maxAllowedHeight = 150;
+          document.getElementById("inputField").style.height = "23px";
+
+          socket.on("connect", () => {
+            socket.emit("join");
+          });
+        } else {
+          openModal(0);
         }
-
-        for (let room of eval("{{ data.all_rooms|safe }}")) {
-          $(".rooms-list").append(
-            `<div class='room${
-              room.id == "{{ data.room }}" ? " active-room" : ""
-            }' room-code='${room.id}' onclick='changeRoom(this)'>` +
-              room.name +
-              "</div>"
-          );
-        }
-
-        /*$("#invite_link").text(
-          window.location.origin + "/invite?code={{ data.room }}"
-        );*/
-
-        document.getElementById("inputField").maxAllowedHeight = 150;
-        document.getElementById("inputField").style.height = "23px";
 
         $(".rooms-list .messages-header, .info-bar .messages-header").height(
           $(".main-message-view .messages-header").height()
         );
       });
+
+      function openModal(tab) {
+        document.getElementsByClassName("tablinks")[tab].click();
+        $(".modal-container").show();
+        $(".modal-container").animate({ opacity: 1 }, 300);
+
+        $(".main").append("<div id='darkable'></div>");
+        $("#darkable").animate({ opacity: 0.4 }, 300);
+      }
 
       function getOffset(textarea) {
         let style = window.getComputedStyle(textarea, null),
@@ -194,6 +311,18 @@
         textarea.style.height = newHeight + "px";
       }
 
+      $(".modal-cancel").click(() => {
+        $(".modal-container").animate({ opacity: 0 }, 300, () => {
+          $(".modal-container").hide();
+        });
+        $("#darkable").animate({ opacity: 0 }, 300, () => {
+          $("#darkable").remove();
+          document.getElementById("join-room-form").reset();
+          document.getElementById("create-room-form").reset();
+          $(".error-box").hide();
+        });
+      });
+
       $("#info-bar-open-button").click(() => {
         $(".main").append("<div id='darkable'></div>");
         if ($(".info-bar").width() == 0) {
@@ -218,10 +347,6 @@
           });
         }
       }
-
-      socket.on("connect", () => {
-        socket.emit("join");
-      });
 
       function submitFormOnEnterPress(e) {
         if (e.which == 13 && !e.shiftKey) {
@@ -265,14 +390,59 @@
           });
       }
 
+      $("#join-room-form").on("submit", (e) => {
+        e.preventDefault();
+        let roomCode = $("#join-room-form").serialize();
+        $.ajax({
+          url: "/room?type=join",
+          type: "post",
+          data: roomCode,
+          success: function (data) {
+            console.log(data);
+            if (data.status == "room_doesnt_exist") {
+              showError("Room does not exist!");
+            } else if (data.status == "success") {
+              window.location.href = "/chat/" + roomCode.split("=")[1];
+            }
+          },
+        });
+      });
+
+      $("#create-room-form").on("submit", (e) => {
+        e.preventDefault();
+
+        $.ajax({
+          url: "/room?type=create",
+          type: "post",
+          data: $("#create-room-form").serialize(),
+          success: function (data) {
+            if (data.status == "success") {
+              //Temporary solution, fix later
+              window.location.href =
+                "/chat" + $("#create-room-form").serialize().split("=")[1];
+            }
+          },
+        });
+      });
+
+      function showError(value) {
+        $(".error-box").text(value);
+        $(".error-box").show();
+      }
+
       socket.on("receive_message", (msg) => {
         message = msg.message;
         username = msg.username;
-        
+
         let lastElement = $(".message:not(#typing-status):not(.status)").last();
         let lastElementHasTime;
 
-        if(lastElement.find(".message-time").text() == msg.time && ((!lastElement.hasClass("from-user") && msg.username != currentUser) || (lastElement.hasClass("from-user") && msg.username == currentUser))){
+        if (
+          lastElement.find(".message-time").text() == msg.time &&
+          ((!lastElement.hasClass("from-user") &&
+            msg.username != currentUser) ||
+            (lastElement.hasClass("from-user") && msg.username == currentUser))
+        ) {
           lastElement.removeClass("has-time");
         }
 
@@ -328,9 +498,7 @@
       socket.on("status", (msg) => {
         if (msg.type == "join") {
           $(".messages").append(
-            "<b class='status'>" +
-              msg.username +
-              " has joined the room</b>"
+            "<b class='status'>" + msg.username + " has joined the room</b>"
           );
 
           pariticpants_list = [];
@@ -345,10 +513,7 @@
           $(".messages").append(
             "<div><b>" + msg.username + " has left the room</b></div>"
           );
-        } else if (
-          msg.type == "typing" &&
-          msg.username != currentUser
-        ) {
+        } else if (msg.type == "typing" && msg.username != currentUser) {
           if (msg.typing && !document.getElementById("typing-status")) {
             $(".messages").append(
               `<div class="message-container">
@@ -366,6 +531,16 @@
         socket.emit("leave");
         socket.disconnect();
         window.location.href = "/";
+      }
+      function signout() {
+        $.ajax({
+          url: "/api/signout",
+          type: "post",
+          data: { username: "{{ data.username }}" },
+          success: () => {
+            window.location.href = "/";
+          },
+        });
       }
 
       var timeout = null;
