@@ -27,29 +27,6 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 @app.route("/")
 def index():
-    """username = session.get('username')
-    invite_code = request.args.get('invite_code')
-
-    data={'username': None, 'logged_in': False, 'rooms': [], 'from_invite': False, 'invite_code': None}
-
-    if invite_code:
-            data['from_invite'] = True
-            data['invite_code'] = invite_code
-
-    if session.get('logged_in'):
-            with sqlite3.connect("database.db") as con:
-                    cur = con.cursor()
-                    all_rooms = cur.execute("SELECT id, name FROM rooms WHERE users LIKE '%" + username + "%'").fetchall()
-                    data['rooms'] = all_rooms
-
-            data['username'] = username
-            data['logged_in'] = True
-
-    else:
-            return redirect(url_for('login', from_invite = (data['from_invite'] if data['from_invite'] else None), invite_code=data['invite_code']))
-
-    return render_template("index.html", data=data)"""
-
     if session.get("logged_in"):
         return redirect(url_for("chat_index"))
     else:
@@ -81,6 +58,7 @@ def login():
         from_invite=args.get("from_invite"),
         invite_code=args.get("invite_code"),
     )
+
 
 @app.route("/room", methods=["GET", "POST"])
 def room():
@@ -117,11 +95,11 @@ def room():
             cur = con.cursor()
             cur.execute(
                 "INSERT INTO rooms (id,name,users) VALUES (?,?,?)",
-                (room_id, room, session["username"] + ","),
+                (room_id, room, session["username"]),
             )
             con.commit()
 
-        return jsonify({"status": "success"})
+        return jsonify({"status": "success", "room": room_id})
 
 
 @app.route("/chat")
@@ -160,6 +138,14 @@ def chat(room):
             room_name = data[1]
             users_in_room = data[2].split(",")
 
+            if username not in users_in_room:
+                users_in_room.append(username)
+                cur.execute(
+                    "UPDATE rooms SET users = ? WHERE id = ?",
+                    (",".join(users_in_room), room),
+                )
+                con.commit()
+
             all_rooms = []
             for i in cur.execute(
                 "SELECT * FROM rooms WHERE users LIKE '%" + username + "%'"
@@ -171,14 +157,6 @@ def chat(room):
                         "participants": i[2],
                     }
                 )
-
-            if username not in users_in_room:
-                users_in_room.append(username)
-                cur.execute(
-                    "UPDATE rooms SET users = ? WHERE id = ?",
-                    (",".join(users_in_room), room),
-                )
-                con.commit()
 
         data = {
             "username": username,
@@ -270,6 +248,33 @@ def login_api():
             return jsonify({"status": "account_doesnt_exists"})
 
 
+@app.route("/api/leave", methods=["POST"])
+def leave():
+    room = session["room"]
+
+    with sqlite3.connect("database.db") as con:
+        cur = con.cursor()
+        data = cur.execute("SELECT * FROM rooms WHERE id = ?", (room,)).fetchone()
+        room_name = data[1]
+        users_in_room = data[2].split(",")
+        users_in_room.remove(session.get("username"))
+
+        if not users_in_room:
+            cur.execute(
+                "DELETE FROM rooms WHERE id = ?",
+                (room,),
+            )
+        
+        else:
+            cur.execute(
+                "UPDATE rooms SET users = ? WHERE id = ?",
+                (",".join(users_in_room), room),
+            )
+        con.commit()
+
+    return redirect(url_for("chat_index"))
+
+
 @app.route("/api/signout", methods=["POST"])
 def signout():
     session.clear()
@@ -306,7 +311,7 @@ def join(json=None):
 
 
 @socketio.on("leave", namespace="/chat")
-def leave():
+def leave_message():
     client_room = session.get("room")
     leave_room(client_room, namespace="/chat")
     emit(
@@ -336,10 +341,19 @@ def send_status(json):
     )
 
 
-
-@socketio.on('change_room', namespace='/chat')
+@socketio.on("change_room", namespace="/chat")
 def change_room(json):
-	emit('status', {'username': session.get('username'), 'type': 'typing', 'typing': json['typing']}, namespace='/chat', room=session.get('room'))
+    emit(
+        "status",
+        {
+            "username": session.get("username"),
+            "type": "typing",
+            "typing": json["typing"],
+        },
+        namespace="/chat",
+        room=session.get("room"),
+    )
+
 
 if __name__ == "__main__":
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
